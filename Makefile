@@ -1,43 +1,57 @@
+############################################
+################# MAKEFILE #################
+############################################
+
+# -.-.-.-.	Colors 	-.-.-.-.-.
+
+C_DEFAUT		=	\033[0;39m
+C_ORANGE		=	\033[0;33m
+C_GREEN 		= 	\033[1;32m
+C_RED			= 	\033[0;31m
+
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-
+
 NAME = webserv
 
-FLAGS = -Wall -Wextra -Werror -std=c++11 -I includes							# flag c++98
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
+
+FLAGS 	= 	-Wall -Wextra -Werror -std=c++11 -I includes							# flag c++98
+CC		= 	c++
+RM		= 	rm -f
+PRI		= 	printf
+VEL		= 	sleep
+
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
 
 INCLUDES	=	./includes
 
-SRCS_DIR = src
-OBJS_DIR = obj
+SRCS		=	./srcs/main.cpp 			\
+				./srcs/Client.class.cpp 	\
+				./srcs/Requete.class.cpp \
+				./srcs/Conf.class.cpp	\
+				./srcs/Server.class.cpp	\
+				./srcs/Socket.class.cpp 	\
+				./srcs/cgi.cpp 			\
+				./srcs/Servers.class.cpp \
+				./srcs/Location.class.cpp 
 
-SRCS =	main.cpp \
-		Client.class.cpp \
-		Requete.class.cpp \
-		Conf.class.cpp\
-		Server.class.cpp \
-		Socket.class.cpp \
-		cgi.cpp \
-		Servers.class.cpp \
-		Location.class.cpp \
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
 
-OBJS = $(addprefix ${OBJS_DIR}/,${SRCS:.cpp=.o})
+all : ${NAME}
 
-all: create_dir $(OBJS)
-		@c++ $(FLAGS) $(OBJS) -o $(NAME)
-		@echo "\033[32mCOMPILATION OK\033[0m"
-
-${OBJS_DIR}/%.o:${SRCS_DIR}/%.cpp
-		@c++ ${FLAGS} -I ${INCLUDES} -c $< -o $@
+${NAME} :
+#	@${PRI} "\n${C_ORANGE}... compiling ...\n${C_DEFAUT}"
+	@${CC} ${FLAGS} -I ${INCLUDES} ${SRCS} -o ${NAME}
+	@${PRI} "${C_ORANGE}... compiling ...\n\n${C_DEFAUT}"
+#	@${VEL} 0.3
+	@${PRI} "${C_GREEN}$@ exec --> Successfully Build\n\n${C_DEFAUT}"
 		
 clean:
-		@rm -rf $(OBJS)
-		@echo "\033[36mCLEAN OK\033[0m"
 
 fclean: clean
-		@rm -rf $(NAME)
-		@rm -rf $(OBJS_DIR)
-		@echo "\033[36mFCLEAN OK\033[0m"
+	@${RM} ${NAME}
+	@${PRI} "\n${C_RED}Exec file deleted\n\n${C_DEFAUT}"
 
 re: fclean all
-
-create_dir:
-		@mkdir -p $(OBJS_DIR)
 
 .PHONY: all fclean clean re
