@@ -2,25 +2,51 @@
 <html lang="en">
 
 <head>
+	<title>19 WebServ</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="/stylesheets/style.css">
+	<link rel="stylesheet" href="style.css">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
 		integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-	<title>upload</title>
+	<style>
+		body {
+			text-align: center;
+			background-image: url('img/land.jpg');
+			background-repeat: no-repeat;
+			background-size: cover;
+			background-position: center center;
+		}
+		footer {
+			text-align: left;
+			position: absolute;
+			bottom: 0;
+		}
+		form {
+			text-align: left;
+		}
+	</style>
 </head>
 
 <body>
-	<div class="center">
+	<h2><br>WebServ Upload<br></h2>
+	<br><div class="center">
 		<form action="cgi_bin/upload.py" method="post" enctype="multipart/form-data">
-			<input type="file" name="file1" class="btn btn-secondary">
-			<button type="submit" class="btn btn-primary">Upload with python</button>
+			<input id="files" type="file" style="visibility:hidden;" name="input_file" class="btn btn-light">
+			<label for="files" class="btn btn-light">Select file</label>
+			<button type="submit" class="btn btn-info">Upload with python</button>
 		</form>
+		<br>
 		<form action="cgi_bin/upload.pl" method="post" enctype="multipart/form-data">
-			<input type="file" name="file1" class="btn btn-secondary">
-			<button type="submit" class="btn btn-primary">Upload with perl</button>
+			<input id="files" type="file" style="visibility:hidden;" name="input_file" class="btn btn-light">
+			<label for="files" class="btn btn-light">Select file</label>
+			<button type="submit" class="btn btn-info">Upload with perl</button>
 		</form>
 	</div>
+
+	<footer>
+		<p>By acaillea & hcremers<br>42 WEBSERV 2023 - GOAL</p>
+	</footer>
+
 </body>
 
 </html>
