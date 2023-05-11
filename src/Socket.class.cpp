@@ -1,7 +1,7 @@
-#include "all_includes.hpp"
+#include "webserv.hpp"
 
 /* --------------------------------------------------------------------------------
-Setup le socket de base du serveur, avec le port et l'ip reçue dans le fichier
+Setup le socket de base du serveur, avec le port et l'ip reçus dans le fichier
 de configuration, le laisser en attente d'une nouvelle requête
 
 Rajouter plus d'explications sur les différentes fonctions standard des sockets

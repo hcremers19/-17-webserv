@@ -1,4 +1,4 @@
-#include "all_includes.hpp"
+#include "webserv.hpp"
 
 /* --------------------------------------------------------------------------------
 Constructor
@@ -55,13 +55,13 @@ void	Conf::check_data()
 {
 	for (size_t i = 0; i < this->_servers.size(); i++)
 	{
-		if (this->_servers[i]->get_name().empty() || this->_servers[i]->getListen().empty() || this->_servers[i]->get_root().empty()
-			|| this->_servers[i]->get_index().empty() || this->_servers[i]->get_method().empty()  || this->_servers[i]->get_body().empty()
+		if (this->_servers[i]->get_name().empty() || this->_servers[i]->get_listen().empty() || this->_servers[i]->get_root().empty()
+			|| this->_servers[i]->get_index().empty() || this->_servers[i]->get_method().empty()  || this->_servers[i]->get_body_size().empty()
 			|| this->_servers[i]->get_listing().empty())
 			throw DirMissing();
 		if (!this->_servers[i]->check_locations())
 			throw DirMissing();
-		if (this->_servers[i]->getListen().size() > 4 || !my_atoi(this->_servers[i]->getListen()) || !my_atoi(this->_servers[i]->get_body()))
+		if (this->_servers[i]->get_listen().size() > 4 || !is_digit_str(this->_servers[i]->get_listen()) || !is_digit_str(this->_servers[i]->get_body_size()))
 			throw NotINT();
 		if (!this->_servers[i]->check_error_page())
 			throw ErrorPage();
@@ -214,7 +214,7 @@ void	Conf::stock_data()
 					throw DirMissing();
 				else if (new_open1 != -1 && new_open1 < close1)
 					throw DirMissing();
-				this->_servers[nb_server]->setLocation();
+				this->_servers[nb_server]->set_location();
 				nb_locations++;
 				status1 = 0;
 			}
@@ -238,11 +238,11 @@ void	Conf::stock_server(std::string line, Servers* server)
 	{
 		last = ft_last_word(line);
 		std::map<std::string, std::string> settings = {
-			{"listen", server->getListen()},
+			{"listen", server->get_listen()},
 			{"server_name", server->get_name()},
 			{"root", server->get_root()},
 			{"index", server->get_index()},
-			{"client_max_body_size", server->get_body()},
+			{"client_max_body_size", server->get_body_size()},
 			{"dir_listing", server->get_listing()}
 		};
 
@@ -252,15 +252,15 @@ void	Conf::stock_server(std::string line, Servers* server)
 				throw DirTwice();
 			settings[word] = last;
 			if (word == "listen")
-				server->setListen(last);
+				server->set_listen(last);
 			else if (word == "server_name")
-				server->setName(last);
+				server->set_name(last);
 			else if (word == "root")
 				server->set_root(last);
 			else if (word == "index")
 				server->set_index(last);
 			else if (word == "client_max_body_size")
-				server->setBody(last);
+				server->set_body_size(last);
 			else if (word == "dir_listing")
 				server->set_listing(last);
 		}
@@ -275,12 +275,39 @@ void	Conf::stock_server(std::string line, Servers* server)
 
 		while (ss >> token)
 			if (line.find(token) != line.rfind(last) && token != word)
-				server->setError(token, last);
+				server->set_error(token, last);
 	}
 
 }
 
 /* --- NON-MEMBER FUNCTION --- */
+
+/* --------------------------------------------------------------------------------
+Vérifier si la string "word" est composée uniquement d'ints ou pas
+-------------------------------------------------------------------------------- */
+bool	is_digit_str(std::string word)
+{
+	int i = -1;
+	while (word[++i])
+		if (!isdigit(word[i]))
+			return false;
+	return true;
+}
+
+/* --------------------------------------------------------------------------------
+Compter le nombre de mots dans la ligne "sentence"
+-------------------------------------------------------------------------------- */
+int		count_words(std::string sentence)
+{
+	int ret = 0, i = -1;
+
+	while (sentence[++i + 1])
+		if (!isspace(sentence[i]) && isspace(sentence[i + 1]))
+			ret++;
+	if (!isspace(sentence[i]))
+		ret++;
+	return (ret);
+}
 
 /* --------------------------------------------------------------------------------
 Fonction non-membre qui permet de retrouver le caractère "c" dans toutes les
@@ -299,4 +326,30 @@ int 	find_char(std::vector<std::string> file, char c, int start = 0)
 				return (i);
 	}
 	return (-1);
+}
+
+/* --------------------------------------------------------------------------------
+Retourner le premier mot de la ligne "line"
+-------------------------------------------------------------------------------- */
+std::string ft_first_word(std::string line)
+{
+	int i = 0, j;
+	while (isspace(line[i]) && line[i++]);
+	j = i - 1;
+	while (!isspace(line[++j]) && line[j]);
+	return (line.substr(i, j - i));
+}
+
+/* --------------------------------------------------------------------------------
+Retourner le dernier mot de la ligne "line"
+-------------------------------------------------------------------------------- */
+std::string ft_last_word(std::string line)
+{
+	int i = line.length() - 1, j;
+	while (isspace(line[--i]) && line[i]);
+
+	j = i + 1;
+	while (--j > 0 && !isspace(line[j]));
+
+	return (line.substr(j + 1, i - j));
 }

@@ -1,7 +1,7 @@
 #ifndef CONF_CLASS_HPP
 # define CONF_CLASS_HPP
 
-# include "all_includes.hpp"
+# include "webserv.hpp"
 
 // Récupère les données du parsing, tout ce qui est configuré se retrouve ici 
 class Conf
@@ -29,6 +29,10 @@ class Conf
 		std::vector<std::string>	_directives;
 };
 
-int 	find_char(std::vector<std::string> file, char c, int start);
+bool 		is_digit_str(std::string word);
+int			count_words(std::string sentence);
+int 		find_char(std::vector<std::string> file, char c, int start);
+std::string ft_first_word(std::string line);
+std::string	ft_last_word(std::string line);
 
 #endif

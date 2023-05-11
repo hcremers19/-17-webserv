@@ -9,7 +9,6 @@ OBJS_DIR = obj
 
 SRCS =	main.cpp \
 		Client.class.cpp \
-		parse_conf.cpp \
 		Requete.class.cpp \
 		Conf.class.cpp\
 		Server.class.cpp \

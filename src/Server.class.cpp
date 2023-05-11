@@ -1,27 +1,27 @@
-#include "all_includes.hpp"
+#include "webserv.hpp"
 
 /* --- MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-La fonction "addtowait" prend en entrée un socket et un pointeur vers un en-
+La fonction "add_to_wait" prend en entrée un socket et un pointeur vers un en-
 semble de sockets (fd_set). Elle ajoute le socket à l'ensemble en utilisant la
-fonction FD_SET, puis met à jour la valeur maximale de socket (max_fd) de l'ob-
+fonction FD_SET, puis met à jour la valeur maximale de socket (maxFd) de l'ob-
 jet Server si le socket donné en entrée est plus grand que la valeur actuelle de
-max_fd.
+maxFd.
 
 Source : ChatGPT
 
 Se renseigner mieux sur FD_SET
 -------------------------------------------------------------------------------- */
-void Server::addtowait(int socket, fd_set* set)
+void Server::add_to_wait(int socket, fd_set* set)
 {
 	FD_SET(socket, set);
-	if (socket > this->max_fd)
-		this->max_fd = socket;
+	if (socket > this->maxFd)
+		this->maxFd = socket;
 }
 
 /* --------------------------------------------------------------------------------
-La fonction "selectfd" prend en entrée deux pointeurs vers des ensembles de so-
+La fonction "select_fd" prend en entrée deux pointeurs vers des ensembles de so-
 ckets (fd_set), un pour les sockets à lire (read) et l'autre pour les sockets à
 écrire (write). Elle appelle la fonction "select" pour surveiller les ensembles
 de sockets donnés en entrée, en attendant que l'un d'entre eux soit prêt à être
@@ -34,10 +34,10 @@ dans l'objet Server.
 
 Source : ChatGPT
 -------------------------------------------------------------------------------- */
-void Server::selectfd(fd_set* read, fd_set* write)
+void Server::select_fd(fd_set* read, fd_set* write)
 {
 	int r = 0;
-	if ((r = select(this->max_fd + 1, read, write, 0, 0)) < 0)
+	if ((r = select(this->maxFd + 1, read, write, 0, 0)) < 0)
 		exit(-1);
 	else if (r == 0)
 		std::cout << "select() time out" << std::endl;
@@ -49,7 +49,7 @@ void Server::selectfd(fd_set* read, fd_set* write)
 La fonction "wait_client" initialise les ensembles de sockets read et write à
 zéro (utilisant la fonction FD_ZERO). Elle ajoute ensuite les sockets du serveur
 et les sockets des clients à l'ensemble read en appelant la fonction
-"addtowait". Enfin, elle appelle la fonction "selectfd" avec les ensembles de
+"add_to_wait". Enfin, elle appelle la fonction "select_fd" avec les ensembles de
 sockets read et write. Cela permet d'attendre qu'un ou plusieurs sockets soient
 prêts à être lus ou écrits, en surveillant tous les sockets présents dans l'en-
 semble read.
@@ -68,10 +68,10 @@ void Server::wait_client()
 	FD_ZERO(&read);
 	FD_ZERO(&write);
 	for (size_t i = 0; i < this->_sockets.size(); i++) // Set fd of server
-		this->addtowait(this->_sockets[i].getServerSocket(), &read);
+		this->add_to_wait(this->_sockets[i].get_server_socket(), &read);
 	for (size_t i = 0; i < this->_clients.size(); i++) // Set fd of server
-		this->addtowait(this->_clients[i].get_client_socket(), &read);
-	this->selectfd(&read, &write);
+		this->add_to_wait(this->_clients[i].get_client_socket(), &read);
+	this->select_fd(&read, &write);
 }
 
 /* --------------------------------------------------------------------------------
@@ -84,11 +84,11 @@ void Server::accept_client()
 
 	for (size_t i = 0; i < this->_sockets.size(); i++)
 	{
-		if (FD_ISSET(this->_sockets[i].getServerSocket(), &this->readSet))
+		if (FD_ISSET(this->_sockets[i].get_server_socket(), &this->readSet))
 		{
 			Client client;
 			client.init(i);
-			client.set_socket_client(accept(this->_sockets[i].getServerSocket(), (struct sockaddr*)&addrclient, &clientSize));
+			client.set_socket_client(accept(this->_sockets[i].get_server_socket(), (struct sockaddr*)&addrclient, &clientSize));
 			this->_clients.push_back(client);
 			if (client.get_client_socket() < 0)
 			{
@@ -136,8 +136,8 @@ void Server::handle_request()
 				int ret = -1;
 				if ((ret = requete.check_method()) != -1)							// Vérifier le nom de la méthode
 				{
-					this->showError(ret, this->_clients[i]);
-					if (this->kill_client(this->_clients[i], requete))
+					this->show_error_page(ret, this->_clients[i]);
+					if (this->kill_client(this->_clients[i]))
 						i--;
 					continue;
 				}
@@ -148,23 +148,23 @@ void Server::handle_request()
 					this->query = urlrcv.substr(pos, urlrcv.size());
 					urlrcv = urlrcv.substr(0, pos);
 				}
-				if (requete.get_len() != std::string::npos && requete.get_len() > (size_t)stoi(this->servers[this->_clients[i].get_n_server()]->get_body())) // Vérifier que la requête n'est pas trop longue
+				if (requete.get_len() != std::string::npos && requete.get_len() > (size_t)stoi(this->servers[this->_clients[i].get_n_server()]->get_body_size())) // Vérifier que la requête n'est pas trop longue
 				{
-					this->showError(413, this->_clients[i]);
-					if (this->kill_client(this->_clients[i], requete))
+					this->show_error_page(413, this->_clients[i]);
+					if (this->kill_client(this->_clients[i]))
 						i--;
 					continue;
 				}
 
-				this->loc = this->getLocation(urlrcv, this->_clients[i].get_n_server());
+				this->loc = this->get_location(urlrcv, this->_clients[i].get_n_server()); // Obtenir l'emplacement du fichier pointé par l'url
 
 				if (!((this->loc == NULL) ? this->is_allowed(this->servers[this->_clients[i].get_n_server()]->get_method(),
 					requete.get_method()) : this->is_allowed(this->loc->get_method(), requete.get_method()))
 						&& urlrcv.find("cgi_bin") == std::string::npos)			// Vérifier si la méthode est autorisée ou pas
 				{
 					std::cout << "Unautorised method " << requete.get_method() << "!" << std::endl;
-					showError(405, this->_clients[i]);
-					if (this->kill_client(this->_clients[i], requete))
+					show_error_page(405, this->_clients[i]);
+					if (this->kill_client(this->_clients[i]))
 						i--;
 					continue;
 				}
@@ -172,30 +172,30 @@ void Server::handle_request()
 				{
 					std::cout << colors::blue << "CGI start!" << colors::reset << std::endl;
 
-					std::string urlsend = this->getRootPatch(urlrcv, this->_clients[i].get_n_server()); // URL à donner au script CGI
+					std::string urlsend = this->get_root_path(urlrcv, this->_clients[i].get_n_server()); // URL à donner au script CGI
 					std::string rescgi = exec_CGI(urlsend, this->envp, requete, this->servers[this->_clients[i].get_n_server()]); // Exécuter le script CGI
 					if (rescgi.empty())
-						this->showError(404, this->_clients[i]);
+						this->show_error_page(404, this->_clients[i]);
 
 					rescgi = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n" + rescgi; // Raccourcissable avec =+
 					int r = send(this->_clients[i].get_client_socket(), rescgi.c_str(), rescgi.size(), 0); // Envoyer le résultat final sur le socket afin qu'il soit affiché
 					if (r < 0)
-						this->showError(500, this->_clients[i]);
+						this->show_error_page(500, this->_clients[i]);
 					else if (r == 0)
-						this->showError(400, this->_clients[i]);
+						this->show_error_page(400, this->_clients[i]);
 				}
 				else
 				{
 					if (this->loc && !this->loc->get_redir().empty())
 						this->do_redir(this->_clients[i], this->loc->get_redir()); // Redirections, pas sûr de comprendre
 					else if (requete.get_method() == "GET")
-						this->get_method(this->_clients[i], urlrcv, requete);
+						this->GET_method(this->_clients[i], urlrcv);
 					else if (requete.get_method() == "POST")
-						this->postMethod(this->_clients[i], urlrcv, requete);
+						this->POST_method(this->_clients[i], urlrcv, requete);
 					else if (requete.get_method() == "DELETE")
-						this->deleteMethod(this->_clients[i], urlrcv);
+						this->DELETE_method(this->_clients[i], urlrcv);
 				}
-				if (this->kill_client(this->_clients[i], requete))				// Effacer ce que le serveur sait du client et fermer son socket puisqu'il ne lui sera plus nécessaire
+				if (this->kill_client(this->_clients[i]))				// Effacer ce que le serveur sait du client et fermer son socket puisqu'il ne lui sera plus nécessaire
 					i--;
 				if (i <= 0)
 				{
@@ -218,24 +218,23 @@ tion, Requete et Servers
 (Besoin de plus d'explications)
 Se renseigner sur le listing
 -------------------------------------------------------------------------------- */
-void Server::get_method(Client& client, std::string urlrcv, Requete req)
+void Server::GET_method(Client& client, std::string urlrcv)
 {
-	(void)req;
 	std::cout << colors::bright_yellow << "GET method!" << colors::reset << std::endl;
 
 	if (urlrcv.size() >= 64)													// L'URL ne peut pas être plus long que 64 caractères (en général, ou seulement ici ?)
 	{
-		this->showError(414, client);
+		this->show_error_page(414, client);
 		return;
 	}
 	struct stat path_stat;														// Structure stat qui permet de récolter et de stocker des informations sur un fichier, pour les réutiliser plus tard
 
-	std::string urlsend = this->getRootPatch(urlrcv, client.get_n_server());
+	std::string urlsend = this->get_root_path(urlrcv, client.get_n_server());
 
 	if (this->loc && !(this->loc->get_index().empty()) && (strcmp(urlrcv.c_str(), \
 		this->loc->get_dir().c_str()) == 0))
 	{
-		this->showPage(client, this->loc->get_root() + this->loc->get_index(), 200);	// AFficher la page si tout est ok
+		this->show_page(client, this->loc->get_root() + this->loc->get_index(), 200);	// AFficher la page si tout est ok
 		return;
 	}
 
@@ -245,7 +244,7 @@ void Server::get_method(Client& client, std::string urlrcv, Requete req)
 	if (fd == NULL)
 	{
 		std::cout << colors::on_bright_blue << "Resource not found: "<< urlsend << colors::reset << std::endl;
-		this->showError(404, client);											// Erreur 404, la page n'a pas été trouvée
+		this->show_error_page(404, client);											// Erreur 404, la page n'a pas été trouvée
 	}
 	else
 	{
@@ -255,14 +254,14 @@ void Server::get_method(Client& client, std::string urlrcv, Requete req)
 			std::cout << colors::on_bright_blue << "File is a directory!" << colors::reset << std::endl;
 
 			if (strcmp(urlrcv.c_str(), "/") == 0)
-				this->showPage(client, urlsend + this->servers[client.get_n_server()]->get_index(), 200);
+				this->show_page(client, urlsend + this->servers[client.get_n_server()]->get_index(), 200);
 			else if (this->servers[client.get_n_server()]->get_listing() == "on" || (this->loc && this->loc->get_listing() == "on"))
 				this->rep_listing(client.get_client_socket(), urlrcv, urlsend, client);
 			else
-				this->showError(404, client);
+				this->show_error_page(404, client);
 		}
 		else
-			this->showPage(client, urlsend, 200);
+			this->show_page(client, urlsend, 200);
 		fclose(fd);
 	}
 }
@@ -272,16 +271,16 @@ Exécuter la méthode DELETE
 
 Besoin de plus d'explications
 -------------------------------------------------------------------------------- */
-void Server::deleteMethod(Client& client, std::string urlrcv)
+void Server::DELETE_method(Client& client, std::string urlrcv)
 {
 	std::cout << colors::bright_yellow << "DELETE method!" << colors::reset << std::endl;
-	std::string urlsend = this->getRootPatch(urlrcv, client.get_n_server());
+	std::string urlsend = this->get_root_path(urlrcv, client.get_n_server());
 
 
 	FILE* fd = fopen(urlsend.c_str(), "r");
 	if (!fd)
 	{
-		this->showError(404, client);
+		this->show_error_page(404, client);
 		return;
 	}
 	fclose(fd);
@@ -290,9 +289,9 @@ void Server::deleteMethod(Client& client, std::string urlrcv)
 	std::string tosend = "HTTP/1.1 200 OK\n";
 	int ret = send(client.get_client_socket(), tosend.c_str(), tosend.size(), 0);
 	if (ret < 0)
-		this->showError(500, client);
+		this->show_error_page(500, client);
 	else if (ret == 0)
-		this->showError(400, client);
+		this->show_error_page(400, client);
 	std::cout << colors::green << urlsend << " has been deleted!" << colors::reset << std::endl;
 }
 
@@ -301,14 +300,14 @@ Exécuter la méthode POST
 
 Besoin de plus d'explications
 -------------------------------------------------------------------------------- */
-void Server::postMethod(Client client, std::string url, Requete req)
+void Server::POST_method(Client client, std::string url, Requete req)
 {
 	if (req.get_header()["Transfer-Encoding"] == "chunked")
 	{
-		this->showError(411, client);
+		this->show_error_page(411, client);
 		return;
 	}
-	std::string urlsend = this->getRootPatch(url, client.get_n_server());
+	std::string urlsend = this->get_root_path(url, client.get_n_server());
 	struct stat buf;
 	lstat(urlsend.c_str(), &buf);
 
@@ -340,7 +339,7 @@ void Server::postMethod(Client client, std::string url, Requete req)
 
 				file = body.substr(start, end - start - 4);
 
-				if (!this->writewithpoll(urlsend + "/" + name, client, file))
+				if (!this->write_with_poll(urlsend + "/" + name, client, file))
 					break;
 
 				if (body[end + req.get_boundary().size()] == '-')
@@ -349,20 +348,20 @@ void Server::postMethod(Client client, std::string url, Requete req)
 		}
 		else
 		{
-			this->showError(400, client);
+			this->show_error_page(400, client);
 			return;
 		}
 	}
 	else
 	{
 		std::cout << "Post in file" << std::endl;
-		if (!this->writewithpoll(urlsend, client, req))
+		if (!this->write_with_poll(urlsend, client, req))
 			return;
 	}
 	if (req.get_len() == 0)
-		this->showPage(client, "", 204);
+		this->show_page(client, "", 204);
 	else
-		this->showPage(client, "", 201);
+		this->show_page(client, "", 201);
 }
 
 /* --------------------------------------------------------------------------------
@@ -378,7 +377,7 @@ void Server::init_server()
 	for (size_t i = 0; i < this->servers.size(); i++)
 	{
 		Socket socket;
-		socket.setup(this->servers[i]->getListen(), this->servers[i]->get_name());
+		socket.setup(this->servers[i]->get_listen(), this->servers[i]->get_name());
 		this->_sockets.push_back(socket);
 	}
 	this->_errors.insert(std::make_pair(200, "200 OK"));
@@ -399,16 +398,16 @@ void Server::init_server()
 	this->_errors.insert(std::make_pair(500, "500 Internal Server Error"));
 	this->_errors.insert(std::make_pair(502, "502 Bad Gateway"));
 	this->_errors.insert(std::make_pair(505, "505 HTTP Version Not Supported"));
-	this->max_fd = -1;
+	this->maxFd = -1;
 }
 
 /* --------------------------------------------------------------------------------
 Envoyer sur le socket le message et la page d'erreur correspondant à l'int reçu
 en premier paramètre
 -------------------------------------------------------------------------------- */
-void Server::showError(int err, Client& client)
+void Server::show_error_page(int err, Client& client)
 {
-	std::map<std::string, std::string> errpages = this->servers[client.get_n_server()]->getError();
+	std::map<std::string, std::string> errpages = this->servers[client.get_n_server()]->get_error();
 	if (errpages.find(std::to_string(err)) != errpages.end())
 	{
 		int fd = open(errpages[std::to_string(err)].c_str(), O_RDONLY);
@@ -420,7 +419,7 @@ void Server::showError(int err, Client& client)
 			return;
 		}
 		close(fd);
-		this->showPage(client, errpages[std::to_string(err)], 200);
+		this->show_page(client, errpages[std::to_string(err)], 200);
 	}
 	else
 	{
@@ -439,27 +438,8 @@ void Server::showError(int err, Client& client)
 }
 
 /* --------------------------------------------------------------------------------
-Fermer le socket attribué au client passé en paramètre et puis l'effacé de la
+Fermer le socket attribué au client passé en paramètre et puis l'effacer de la
 liste de clients enregistrés
-
-Supprimer req si inutile
--------------------------------------------------------------------------------- */
-bool Server::kill_client(Client client, Requete req)
-{
-	(void)req;
-	close(client.get_client_socket());
-	for (size_t i = 0; i < this->_clients.size(); i++)
-	{
-		if (this->_clients[i].get_client_socket() == client.get_client_socket())
-		{
-			this->_clients.erase(this->_clients.begin() + i);
-			return true;
-		}
-	}
-	exit(1);
-}
-/* --------------------------------------------------------------------------------
-Exactement la même fonction que celle juste au-dessus ? --> Si oui, la supprimer
 -------------------------------------------------------------------------------- */
 bool Server::kill_client(Client client)
 {
@@ -491,10 +471,8 @@ bool Server::is_allowed(std::vector<std::string> methodlist, std::string methodr
 
 /* --------------------------------------------------------------------------------
 Renvoie l'url à donner au script CGI ou où aller chercher la page html à afficher
-
-Renommer get_root_path()
 -------------------------------------------------------------------------------- */
-std::string Server::getRootPatch(std::string urlrcv, int i)
+std::string Server::get_root_path(std::string urlrcv, int i)
 {
 	std::string urlroot = this->servers[i]->get_root();
 	if (urlroot[urlroot.size() - 1] == '/')
@@ -532,7 +510,7 @@ Envoyer sur le socket la page à afficher
 
 Espaces superflus à supprimer dans cette fonction
 -------------------------------------------------------------------------------- */
-void Server::showPage(Client client, std::string dir, int code)
+void Server::show_page(Client client, std::string dir, int code)
 {
 	int r;
 
@@ -543,9 +521,9 @@ void Server::showPage(Client client, std::string dir, int code)
 	{
 		std::string err_msg = "HTTP/1.1 " + this->_errors[code] + "\n\n";
 		if ((r = send(client.get_client_socket(), err_msg.c_str(), err_msg.size(), 0)) < 0)
-			this->showError(500, client);
+			this->show_error_page(500, client);
 		else if (r == 0)
-			this->showError(400, client);
+			this->show_error_page(400, client);
 		return;
 	}
 	else
@@ -561,22 +539,22 @@ void Server::showPage(Client client, std::string dir, int code)
 		std::string msg = "HTTP/1.1 " + this->_errors.find(code)->second + "\n" + "Content-Type: " + type + "\nContent-Length: " + std::to_string(lSize) + "\n\n"; // Concaténer toutes les infos du header de réponse HTTP dans une string
 		int ret = send(client.get_client_socket(), msg.c_str(), msg.size(), 0);	// Envoyer la string générée sur le socket
 		if (ret < 0)
-			this->showError(500, client);
+			this->show_error_page(500, client);
 		else if (ret == 0)
-			this->showError(400, client);
+			this->show_error_page(400, client);
 
 
 
 		int fd_r = open(dir.c_str(), O_RDONLY);									// ... Je comprends plus grand chose à partir d'ici jusqu'à la fin du fichier
 		if (fd_r < 0)
 		{
-			this->showError(500, client);
+			this->show_error_page(500, client);
 			return;
 		}
 
 		// ADD to read queue =================================
-		this->addtowait(fd_r, &this->readSet);
-		this->selectfd(&this->readSet, &this->writeSet);
+		this->add_to_wait(fd_r, &this->readSet);
+		this->select_fd(&this->readSet, &this->writeSet);
 
 		// ==========================
 
@@ -584,31 +562,31 @@ void Server::showPage(Client client, std::string dir, int code)
 		int r2;
 		int r = read(fd_r, file, 1024);
 		if (r < 0)
-			this->showError(500, client);
+			this->show_error_page(500, client);
 		else // Get big file
 		{
 			while (r)
 			{
 				if ((r2 = send(client.get_client_socket(), file, r, 0)) < 0)
 				{
-					this->showError(500, client);
+					this->show_error_page(500, client);
 					break;
 				}
 				else if (r2 == 0)
 				{
-					this->showError(400, client);
+					this->show_error_page(400, client);
 					break;
 				}
 
 				// ADD to read queue =================================
-				this->addtowait(fd_r, &this->readSet);
-				this->selectfd(&this->readSet, &this->writeSet);
+				this->add_to_wait(fd_r, &this->readSet);
+				this->select_fd(&this->readSet, &this->writeSet);
 				// ==========================
 
 
 				if ((r = read(fd_r, file, 1024)) < 0)
 				{
-					this->showError(500, client);
+					this->show_error_page(500, client);
 					break;
 				}
 				if (r == 0)
@@ -646,31 +624,35 @@ void Server::rep_listing(int socket, std::string path, std::string fullurl, Clie
 	tosend += "</pre>\n</body>\n</html>\n";
 	int r = send(socket, tosend.c_str(), tosend.size(), 0);
 	if (r < 0)
-		this->showError(500, client);
+		this->show_error_page(500, client);
 	else if (r == 0)
-		this->showError(400, client);
+		this->show_error_page(400, client);										// Bad request
 }
 
-bool Server::writewithpoll(std::string url, Client client, std::string str)
+/* --------------------------------------------------------------------------------
+Écrire dans l'url passé en paramètre le contenu de la requête POST
+Le fd du fichier dans lequel on veut écrire est d'abord mis en file d'attente pour s'assurer qu'il n'y ait aucun chevauchement
+
+Cette fonction possède une surcharge dans laquelle on passe toute la classe Requete pour aller y chercher la string voulue
+-------------------------------------------------------------------------------- */
+bool Server::write_with_poll(std::string url, Client client, std::string str)
 {
 	int r = 0;
 	int fd = open(url.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0644);
 	if (fd < 0)
 	{
-		this->showError(500, client);
+		this->show_error_page(500, client);
 		close(fd);
 		return false;
 	}
 
-	// ADD to write queue =================================
-	this->addtowait(fd, &this->writeSet);
-	this->selectfd(&this->readSet, &this->writeSet);
-	// =======================
+	this->add_to_wait(fd, &this->writeSet);
+	this->select_fd(&this->readSet, &this->writeSet);
 
 	r = write(fd, str.c_str(), str.size());
 	if (r < 0)
 	{
-		this->showError(500, client);
+		this->show_error_page(500, client);										// Internal server error
 		close(fd);
 		return false;
 	}
@@ -678,27 +660,31 @@ bool Server::writewithpoll(std::string url, Client client, std::string str)
 	return true;
 }
 
-bool Server::writewithpoll(std::string url, Client client, Requete req)
+/* --------------------------------------------------------------------------------
+Écrire dans l'url passé en paramètre le contenu de la requête POST
+Le fd du fichier dans lequel on veut écrire est d'abord mis en file d'attente pour s'assurer qu'il n'y ait aucun chevauchement
+
+Cette fonction possède une surcharge dans laquelle on ne passe que la string nécessaire et non pas toute la classe Requete
+-------------------------------------------------------------------------------- */
+bool Server::write_with_poll(std::string url, Client client, Requete req)
 {
 	int r = 0;
 	int fd = open(url.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0644);
 	if (fd < 0)
 	{
-		this->showError(500, client);
+		this->show_error_page(500, client);
 		close(fd);
 		return false;
 	}
 
-	// ADD to write queue =================================
-	this->addtowait(fd, &this->writeSet);
-	this->selectfd(&this->readSet, &this->writeSet);
-	// =======================
+	this->add_to_wait(fd, &this->writeSet);
+	this->select_fd(&this->readSet, &this->writeSet);
 
 	std::cout << colors::green << req.get_full_body() << colors::reset << std::endl;
 	r = write(fd, req.get_full_body().c_str(), req.get_full_body().size());
 	if (r < 0)
 	{
-		this->showError(500, client);
+		this->show_error_page(500, client);
 		close(fd);
 		return false;
 	}
@@ -706,9 +692,13 @@ bool Server::writewithpoll(std::string url, Client client, Requete req)
 	return true;
 }
 
-Location* Server::getLocation(std::string url, int i)
+/* --------------------------------------------------------------------------------
+Obtenir l'emplacement du fichier pointé par l'url
+Passe par le vecteur "_locations" de la classe Servers pour y chercher le fichier demandé
+-------------------------------------------------------------------------------- */
+Location* Server::get_location(std::string url, int i)
 {
-	std::vector<Location*> locs = this->servers[i]->getLocation();
+	std::vector<Location*> locs = this->servers[i]->get_location();
 	for (size_t i = 0; i < locs.size(); i++)
 	{
 		if (strncmp(locs[i]->get_dir().c_str(), url.c_str(), locs[i]->get_dir().size()) == 0)
@@ -720,6 +710,11 @@ Location* Server::getLocation(std::string url, int i)
 	return NULL;
 }
 
+/*
+En cas de redirection (lien qui pointe vers un autre site)
+
+Envoie un message de réponse HTML pour rediriger le client vers le site désiré
+*/
 void Server::do_redir(Client client, std::string url)
 {
 	std::cout << colors::on_cyan << "Is a redirection to: " << url << colors::reset << std::endl;
@@ -727,9 +722,9 @@ void Server::do_redir(Client client, std::string url)
 
 	int r = send(client.get_client_socket(), tosend.c_str(), tosend.size(), 0);
 	if (r < 0)
-		this->showError(500, client);
+		this->show_error_page(500, client);
 	else if (r == 0)
-		this->showError(400, client);
+		this->show_error_page(400, client);
 }
 
 /* --- NON-MEMBER FUNCTIONS --- */
@@ -738,6 +733,9 @@ void Server::do_redir(Client client, std::string url)
 Trouver l'extension du fichier reçu en paramètre pour inclure le bon type de contenu dans le message de réponse http
 
 Sûrement une meilleure façon de faire avec std::string que de repasser par un char* pour utiliser strcmp -_-
+
+Pas vraiment de fonction C++ qui permet de trouver la dernière occurence d'une std::string
+find_last_of() le fait avec un caractère mais ne retourne que sa position sous forme de size_t
 -------------------------------------------------------------------------------- */
 std::string find_type(std::string dir)
 {
@@ -756,11 +754,16 @@ std::string find_type(std::string dir)
 	return "text/plain";
 }
 
-char	*ft_strnstr(const char *haystack, const char *needle, size_t n)
+/* --------------------------------------------------------------------------------
+Fonction de la libft qui reproduit le comportement de la fonction strnstr, qui n'est pas disponible sur toutes les plateformes
+
+Elle recherche la chaîne de caractères "needle" dans la chaîne de caractères "haystack" jusqu'au carctère en position "n", et retourne un pointeur vers le premier caractère de la chaîne trouvée, ou NULL le cas échéant
+-------------------------------------------------------------------------------- */
+char*	ft_strnstr(const char *haystack, const char *needle, size_t n)
 {
-	size_t	in;
-	size_t	ih;
-	char	*hs;
+	size_t	in;																	// Index de needle
+	size_t	ih;																	// Index de haystack
+	char	*hs;																// Copie de haystack
 
 	ih = 0;
 	hs = (char *)haystack;
@@ -779,6 +782,7 @@ char	*ft_strnstr(const char *haystack, const char *needle, size_t n)
 	}
 	return (0);
 }
+
 /* --------------------------------------------------------------------------------
 Fonction en C qui détermine si la requête a bien terminé d'être envoyée par le
 client/reçue par le serveur

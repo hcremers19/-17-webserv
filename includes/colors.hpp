@@ -1,7 +1,7 @@
 #ifndef COLORS_HPP_
 # define COLORS_HPP_
 
-# include "all_includes.hpp"
+# include "webserv.hpp"
 
 # if defined(_WIN32) || defined(_WIN64)
 #  define COLORS_TARGET_WINDOWS

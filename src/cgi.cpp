@@ -1,4 +1,4 @@
-#include "all_includes.hpp"
+#include "webserv.hpp"
 
 /* --------------------------------------------------------------------------------
 Renvoyer le chemin vers l'exécutable dans lequel lancer le script, en fonction de si l'extension du fichier est .py (Pyhton) ou .pl (Perl)
@@ -15,12 +15,10 @@ std::string file_extention(std::string filePwd)
 
 /* --------------------------------------------------------------------------------
 Vérifier si l'exécutable peut être lancé avec le chemin reçu
-(SUPPRIMER LE PARAMÈTRE ENVP QUI N'A PLUS L'AIR D'ÊTRE NÉCESSAIRE)
 Renvoyer le chemin vers l'exécutable s'il fonctionne, sinon une chaîne vide
 -------------------------------------------------------------------------------- */
-std::string search_exec(std::string filePwd, char** envp)
+std::string search_exec(std::string filePwd)
 {
-	(void)envp;
 	const std::string exec = file_extention(filePwd);
 
 	if (exec == "")
@@ -90,7 +88,7 @@ Le texte généré par l'exécutable est récupéré et retourné à la fin de l
 -------------------------------------------------------------------------------- */
 std::string exec_CGI(std::string filePwd, char** envp, Requete& req, Servers* serv)
 {
-	std::string execPwd = search_exec(filePwd, envp);
+	std::string execPwd = search_exec(filePwd);
 	if (execPwd == "")
 	{
 		std::cerr << "Bad file" << std::endl;

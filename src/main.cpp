@@ -1,17 +1,32 @@
-#include "all_includes.hpp"
+#include "webserv.hpp"
 
 /* --------------------------------------------------------------------------------
 Variable globale dans laquelle vont tourner la plupart des autres variables
 -------------------------------------------------------------------------------- */
 Server serv;
 
-void deleteallfd(Server serv)
+/* --------------------------------------------------------------------------------
+Fonction principale du parsing du fichier de configuration
+Vérifie d'abord si le fichier passé en argument est valide, puis appelle toutes les autres fonctions servant à stocker les informations du fichier de configuration dans la classe Conf
+-------------------------------------------------------------------------------- */
+void parsing(int argc, char **argv, Conf& data)
 {
-	for (size_t i = 0; i < serv.getSocketList().size(); i++)
-		close(serv.getSocketList()[i].getServerSocket());
-	for (size_t i = 0; i < serv.getClientsList().size(); i++)
-		close(serv.getClientsList()[i].get_client_socket());
-	std::cout << colors::green << "Clean all Fd" << colors::reset << std::endl;
+	if (argc != 2)
+		throw ArgvErr();
+
+	std::ifstream file(argv[1]);
+	if (!file)
+		throw ArgvErr();
+
+	std::string name = std::string(argv[1]);
+	if (name.find(".conf") == std::string::npos) // npos == -1 in size_t
+		throw ArgvErr();
+
+	data.read_file(argv[1]);
+	data.init_file_pos();
+	data.check_directive();
+	data.stock_data();
+	data.check_data();
 }
 
 /* --------------------------------------------------------------------------------
@@ -22,10 +37,10 @@ void sig_handler(int signal)
 {
 	(void)signal;
 
-	for (size_t i = 0; i < serv.getSocketList().size(); i++)
-		close(serv.getSocketList()[i].getServerSocket());
-	for (size_t i = 0; i < serv.getClientsList().size(); i++)
-		close(serv.getClientsList()[i].get_client_socket());
+	for (size_t i = 0; i < serv.get_socket_list().size(); i++)
+		close(serv.get_socket_list()[i].get_server_socket());
+	for (size_t i = 0; i < serv.get_client_list().size(); i++)
+		close(serv.get_client_list()[i].get_client_socket());
 
 	std::cout << colors::grey << colors::on_red << "\nServer killed, bye!" << colors::reset << std::endl;
 
@@ -59,7 +74,7 @@ int main(int ac, char **av, char **envp)
 	serv.init_server();
 	signal(SIGINT, sig_handler);
 
-	while (1)																	// Boucle principale dans laquelle sera traitée chaque interaction avec le serveur
+	while (19)																	// Boucle principale dans laquelle sera traitée chaque interaction avec le serveur
 	{
 		serv.wait_client();														// Séparer les fonctions relatives à ces 3 lignes dans des fichiers différents ?
 		serv.accept_client();

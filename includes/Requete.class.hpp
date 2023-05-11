@@ -1,9 +1,9 @@
 #ifndef REQUETE_CLASS_HPP
 # define REQUETE_CLASS_HPP
 
-# include "all_includes.hpp"
+# include "webserv.hpp"
 
-
+// Peut être renomée Request
 class Requete
 {
 	public:

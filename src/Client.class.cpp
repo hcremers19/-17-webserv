@@ -1,4 +1,4 @@
-#include "all_includes.hpp"
+#include "webserv.hpp"
 
 /* --- ACCESSORS --- */
 

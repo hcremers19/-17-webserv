@@ -1,4 +1,4 @@
-#include "all_includes.hpp"
+#include "webserv.hpp"
 
 /* --------------------------------------------------------------------------------
 Constructor
@@ -37,7 +37,7 @@ Vérifier que la méthode est correcte (GET, POST ou DELETE)
 -------------------------------------------------------------------------------- */
 int Requete::check_method()
 {
-	return ((this->_method != "POST" && this->_method != "GET" && this->_method != "DELETE")? 405 : ((this->_protocol != "HTTP/1.1") ? 505 : -1));
+	return ((this->_method != "POST" && this->_method != "GET" && this->_method != "DELETE") ? 405 : ((this->_protocol != "HTTP/1.1") ? 505 : -1));
 }
 
 /* --------------------------------------------------------------------------------

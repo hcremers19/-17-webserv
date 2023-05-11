@@ -1,9 +1,17 @@
-#include "all_includes.hpp"
+#include "webserv.hpp"
 
+/* --------------------------------------------------------------------------------
+Constructor
+-------------------------------------------------------------------------------- */
 Servers::Servers()
 {
 }
 
+/* --------------------------------------------------------------------------------
+Destructor
+
+Vide les différents conteneurs qui ont été utilisés dans cette classe
+-------------------------------------------------------------------------------- */
 Servers::~Servers()
 {
 	for (size_t i = 0; i < this->_locations.size(); i++)
@@ -13,17 +21,19 @@ Servers::~Servers()
 	this->_error.clear();
 }
 
-/* --- Functions --- */
+/* --- MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Vérifier que la taille max du serveur (directive client_max_body_size, variable _body_size) n'est pas supérieure à 2147483647 ou inférieure à 10
+Vérifier que la taille max du serveur (directive client_max_body_size, variable _bodySize) n'est pas supérieure à 2147483647 ou inférieure à 10
 -------------------------------------------------------------------------------- */
 bool Servers::check_client_size()
 {
-	return (this->_body_size.size() > 10) ? false : (atoi(this->_body_size.c_str()) <= 2147483647);
+	return (this->_bodySize.size() > 10) ? false : (atoi(this->_bodySize.c_str()) <= 2147483647);
 }
 
-// Vérifier que les données stockées dans les instances de la classe Location reprises dans le vecteur membre "_locations" ne sont pas vides
+/* --------------------------------------------------------------------------------
+Vérifier que les données stockées dans les instances de la classe Location reprises dans le vecteur membre "_locations" ne sont pas vides
+-------------------------------------------------------------------------------- */
 bool Servers::check_locations()
 {
 	for (size_t i = 0; i < this->_locations.size(); i++)
@@ -86,7 +96,7 @@ bool Servers::check_error_page()
 	std::map<std::string, std::string>::iterator it_end = this->_error.end();
 	while (it != it_end)
 	{
-		if (!my_atoi(it->first) || (it->second).find(".html") == std::string::npos)
+		if (!is_digit_str(it->first) || (it->second).find(".html") == std::string::npos)
 			return false;
 		it++;
 	}
@@ -117,7 +127,7 @@ bool Servers::check_root()
 }
 
 /* --------------------------------------------------------------------------------
-Stocker les informations de la ligne "line" dans le vecteur membre _locations à la position "pos"
+Stocker les informations de la ligne "line" dans le vecteur membre "_locations" à la position "pos"
 -------------------------------------------------------------------------------- */
 void Servers::stock_location(std::string line, int pos)
 {
