@@ -1,9 +1,9 @@
-#ifndef CLIENT_CLASS_HPP
-# define CLIENT_CLASS_HPP
+#ifndef CLIENT_HPP
+# define CLIENT_HPP
 
 # define MAX_REQUEST_SIZE 65536													// Pourquoi ce nombre ?
 
-# include "webserv.hpp"
+# include "../webserv.hpp"
 
 class Client
 {

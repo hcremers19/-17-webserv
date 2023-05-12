@@ -1,4 +1,4 @@
-#include "webserv.hpp"
+#include "../webserv.hpp"
 
 /* --- MEMBER FUNCTIONS --- */
 
@@ -6,14 +6,14 @@
 La fonction "add_to_wait" prend en entrée un socket et un pointeur vers un en-
 semble de sockets (fd_set). Elle ajoute le socket à l'ensemble en utilisant la
 fonction FD_SET, puis met à jour la valeur maximale de socket (maxFd) de l'ob-
-jet Server si le socket donné en entrée est plus grand que la valeur actuelle de
+jet Host si le socket donné en entrée est plus grand que la valeur actuelle de
 maxFd.
 
 Source : ChatGPT
 
 Se renseigner mieux sur FD_SET
 -------------------------------------------------------------------------------- */
-void Server::add_to_wait(int socket, fd_set* set)
+void Host::add_to_wait(int socket, fd_set* set)
 {
 	FD_SET(socket, set);
 	if (socket > this->maxFd)
@@ -30,11 +30,11 @@ reur, dans ce cas, le programme se termine avec un code de sortie -1. Si
 select() renvoie 0, cela signifie que la fonction a expiré avant qu'un socket
 soit prêt, et un message "select() time out" est affiché. Sinon, les ensembles
 de sockets à écrire et à lire sont mis à jour avec les sockets correspondants
-dans l'objet Server.
+dans l'objet Host.
 
 Source : ChatGPT
 -------------------------------------------------------------------------------- */
-void Server::select_fd(fd_set* read, fd_set* write)
+void Host::select_fd(fd_set* read, fd_set* write)
 {
 	int r = 0;
 	if ((r = select(this->maxFd + 1, read, write, 0, 0)) < 0)
@@ -60,7 +60,7 @@ Source : ChatGPT
 y en a donc un seul par serveur configuré
 Se renseigner mieux sur FD_ZERO et fd_set
 -------------------------------------------------------------------------------- */
-void Server::wait_client()
+void Host::wait_client()
 {
 	fd_set read;
 	fd_set write;
@@ -77,7 +77,7 @@ void Server::wait_client()
 /* --------------------------------------------------------------------------------
 Accepter le client, configurer sa classe, l'enregistrer dans _clients
 -------------------------------------------------------------------------------- */
-void Server::accept_client()
+void Host::accept_client()
 {
 	sockaddr_in addrclient;
 	socklen_t clientSize = sizeof(addrclient);
@@ -108,7 +108,7 @@ Fonction principale de gestion des requêtes reçues
 - Traite le message en fonction de la méthode demandée
 - Exécute le script CGI
 -------------------------------------------------------------------------------- */
-void Server::handle_request()
+void Host::handle_request()
 {
 	for (size_t i = 0; i < this->_clients.size(); i++)							// Faire cette action pour tous les clients différents
 	{
@@ -132,7 +132,7 @@ void Server::handle_request()
 			else if (is_request_done((char *)this->_clients[i].finalRequest.c_str(), header_size, this->_clients[i].requestSize)) // Vérifier qu'on a bien toute la requête
 			{
 				std::cout << colors::bright_cyan << "== New request! ==" << colors::reset << std::endl;
-				Requete requete((char*)this->_clients[i].finalRequest.c_str()); // Construire la classe requête sur base de la string reçue
+				Request requete((char*)this->_clients[i].finalRequest.c_str()); // Construire la classe requête sur base de la string reçue
 				int ret = -1;
 				if ((ret = requete.check_method()) != -1)							// Vérifier le nom de la méthode
 				{
@@ -213,12 +213,12 @@ Exécuter la méthode GET
 
 Supprimer la variable req si elle est inutile
 NE PAS CONFONDRE avec le getter de la variable _method dans les classes Loca-
-tion, Requete et Servers
+tion, Request et Server
 
 (Besoin de plus d'explications)
 Se renseigner sur le listing
 -------------------------------------------------------------------------------- */
-void Server::GET_method(Client& client, std::string urlrcv)
+void Host::GET_method(Client& client, std::string urlrcv)
 {
 	std::cout << colors::bright_yellow << "GET method!" << colors::reset << std::endl;
 
@@ -271,7 +271,7 @@ Exécuter la méthode DELETE
 
 Besoin de plus d'explications
 -------------------------------------------------------------------------------- */
-void Server::DELETE_method(Client& client, std::string urlrcv)
+void Host::DELETE_method(Client& client, std::string urlrcv)
 {
 	std::cout << colors::bright_yellow << "DELETE method!" << colors::reset << std::endl;
 	std::string urlsend = this->get_root_path(urlrcv, client.get_n_server());
@@ -300,7 +300,7 @@ Exécuter la méthode POST
 
 Besoin de plus d'explications
 -------------------------------------------------------------------------------- */
-void Server::POST_method(Client client, std::string url, Requete req)
+void Host::POST_method(Client client, std::string url, Request req)
 {
 	if (req.get_header()["Transfer-Encoding"] == "chunked")
 	{
@@ -372,7 +372,7 @@ Insérer les codes d'erreur dans _errors
 socket : socket de base, d'écoute, peut être instancié plusieurs fois si la con-
 figuration de webserv demande de configurer plusieurs serveurs
 -------------------------------------------------------------------------------- */
-void Server::init_server()
+void Host::init_server()
 {
 	for (size_t i = 0; i < this->servers.size(); i++)
 	{
@@ -405,7 +405,7 @@ void Server::init_server()
 Envoyer sur le socket le message et la page d'erreur correspondant à l'int reçu
 en premier paramètre
 -------------------------------------------------------------------------------- */
-void Server::show_error_page(int err, Client& client)
+void Host::show_error_page(int err, Client& client)
 {
 	std::map<std::string, std::string> errpages = this->servers[client.get_n_server()]->get_error();
 	if (errpages.find(std::to_string(err)) != errpages.end())
@@ -441,7 +441,7 @@ void Server::show_error_page(int err, Client& client)
 Fermer le socket attribué au client passé en paramètre et puis l'effacer de la
 liste de clients enregistrés
 -------------------------------------------------------------------------------- */
-bool Server::kill_client(Client client)
+bool Host::kill_client(Client client)
 {
 	std::cout << colors::red << "Client killed" << colors::reset << std::endl;
 	close(client.get_client_socket());
@@ -461,7 +461,7 @@ bool Server::kill_client(Client client)
 Vérifie si la méthode reçue par le client fait partie des méthodes autorisées ou
 pas
 -------------------------------------------------------------------------------- */
-bool Server::is_allowed(std::vector<std::string> methodlist, std::string methodreq)
+bool Host::is_allowed(std::vector<std::string> methodlist, std::string methodreq)
 {
 	for (size_t i = 0; i < methodlist.size(); i++)
 		if (methodlist[i] == methodreq)
@@ -472,7 +472,7 @@ bool Server::is_allowed(std::vector<std::string> methodlist, std::string methodr
 /* --------------------------------------------------------------------------------
 Renvoie l'url à donner au script CGI ou où aller chercher la page html à afficher
 -------------------------------------------------------------------------------- */
-std::string Server::get_root_path(std::string urlrcv, int i)
+std::string Host::get_root_path(std::string urlrcv, int i)
 {
 	std::string urlroot = this->servers[i]->get_root();
 	if (urlroot[urlroot.size() - 1] == '/')
@@ -488,7 +488,7 @@ std::string Server::get_root_path(std::string urlrcv, int i)
 Vérifier si le fichier à traiter est pris en charge par notre serveur (python ou
 perl)
 -------------------------------------------------------------------------------- */
-bool Server::is_cgi(std::string filename)
+bool Host::is_cgi(std::string filename)
 {
 	std::vector<std::string>  cgi_list;
 	cgi_list.push_back(".py");
@@ -510,7 +510,7 @@ Envoyer sur le socket la page à afficher
 
 Espaces superflus à supprimer dans cette fonction
 -------------------------------------------------------------------------------- */
-void Server::show_page(Client client, std::string dir, int code)
+void Host::show_page(Client client, std::string dir, int code)
 {
 	int r;
 
@@ -602,7 +602,7 @@ Pas ouf comme façon de faire parce que la page à afficher est littéralement c
 
 Les liens n'apparaissent pas dans le bon ordre mais je ne sais pas si c'est à cause de readdir qui le fait mal, ou s'il y a une erreur dans le code
 -------------------------------------------------------------------------------- */
-void Server::directory_listing(int socket, std::string path, std::string fullurl, Client client)
+void Host::directory_listing(int socket, std::string path, std::string fullurl, Client client)
 {
 	std::cout << colors::on_cyan << "Show repository listing" << colors::reset << std::endl;
 
@@ -635,9 +635,9 @@ void Server::directory_listing(int socket, std::string path, std::string fullurl
 Écrire dans l'url passé en paramètre le contenu de la requête POST
 Le fd du fichier dans lequel on veut écrire est d'abord mis en file d'attente pour s'assurer qu'il n'y ait aucun chevauchement
 
-Cette fonction possède une surcharge dans laquelle on passe toute la classe Requete pour aller y chercher la string voulue
+Cette fonction possède une surcharge dans laquelle on passe toute la classe Request pour aller y chercher la string voulue
 -------------------------------------------------------------------------------- */
-bool Server::write_with_poll(std::string url, Client client, std::string str)
+bool Host::write_with_poll(std::string url, Client client, std::string str)
 {
 	int r = 0;
 	int fd = open(url.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0644);
@@ -666,9 +666,9 @@ bool Server::write_with_poll(std::string url, Client client, std::string str)
 Écrire dans l'url passé en paramètre le contenu de la requête POST
 Le fd du fichier dans lequel on veut écrire est d'abord mis en file d'attente pour s'assurer qu'il n'y ait aucun chevauchement
 
-Cette fonction possède une surcharge dans laquelle on ne passe que la string nécessaire et non pas toute la classe Requete
+Cette fonction possède une surcharge dans laquelle on ne passe que la string nécessaire et non pas toute la classe Request
 -------------------------------------------------------------------------------- */
-bool Server::write_with_poll(std::string url, Client client, Requete req)
+bool Host::write_with_poll(std::string url, Client client, Request req)
 {
 	int r = 0;
 	int fd = open(url.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0644);
@@ -696,9 +696,9 @@ bool Server::write_with_poll(std::string url, Client client, Requete req)
 
 /* --------------------------------------------------------------------------------
 Obtenir l'emplacement du fichier pointé par l'url
-Passe par le vecteur "_locations" de la classe Servers pour y chercher le fichier demandé
+Passe par le vecteur "_locations" de la classe Server pour y chercher le fichier demandé
 -------------------------------------------------------------------------------- */
-Location* Server::get_location(std::string url, int i)
+Location* Host::get_location(std::string url, int i)
 {
 	std::vector<Location*> locs = this->servers[i]->get_location();
 	for (size_t i = 0; i < locs.size(); i++)
@@ -717,7 +717,7 @@ En cas de redirection (lien qui pointe vers un autre site)
 
 Envoie un message de réponse HTML pour rediriger le client vers le site désiré
 */
-void Server::do_redir(Client client, std::string url)
+void Host::do_redir(Client client, std::string url)
 {
 	std::cout << colors::on_cyan << "Is a redirection to: " << url << colors::reset << std::endl;
 	std::string tosend = "HTTP/1.1 200 OK\n\n<head><meta http-equiv = \"refresh\" content = \"0; url =" + url + "\" /></head>";

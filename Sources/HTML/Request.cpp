@@ -1,11 +1,11 @@
-#include "webserv.hpp"
+#include "../webserv.hpp"
 
 /* --------------------------------------------------------------------------------
 Constructor
 
 Reçoit la requête sous forme de chaîne de caractères et parse ses différentes informations pour initialiser les différentes variables de la classe
 -------------------------------------------------------------------------------- */
-Requete::Requete(char *requete)
+Request::Request(char *requete)
 {
 	// std::ofstream MyFile("my_input.txt");
 	// MyFile << requete;
@@ -25,7 +25,7 @@ Requete::Requete(char *requete)
 /* --------------------------------------------------------------------------------
 Destructor
 -------------------------------------------------------------------------------- */
-Requete::~Requete()
+Request::~Request()
 {
 	this->_header.clear();
 }
@@ -35,7 +35,7 @@ Requete::~Requete()
 /* --------------------------------------------------------------------------------
 Vérifier que la méthode est correcte (GET, POST ou DELETE)
 -------------------------------------------------------------------------------- */
-int Requete::check_method()
+int Request::check_method()
 {
 	return ((this->_method != "POST" && this->_method != "GET" && this->_method != "DELETE") ? 405 : ((this->_protocol != "HTTP/1.1") ? 505 : -1));
 }
@@ -48,7 +48,7 @@ Décortiquer la méthode POST ?
 Coder soi-même les fonctions c++11
 S'assurer qu'on est ok avec les opérateurs >>
 -------------------------------------------------------------------------------- */
-void Requete::make_POST(std::stringstream& ss)
+void Request::make_POST(std::stringstream& ss)
 {
 	std::string token, line, key;
 	std::string buff;
@@ -114,7 +114,7 @@ Pas compris
 
 Décortiquer la requête GET ?
 -------------------------------------------------------------------------------- */
-void Requete::make_GET(std::stringstream& ss)
+void Request::make_GET(std::stringstream& ss)
 {
 	std::string token, line, key;
 
@@ -146,7 +146,7 @@ void Requete::make_GET(std::stringstream& ss)
 /* --------------------------------------------------------------------------------
 Isoler la query
 -------------------------------------------------------------------------------- */
-void Requete::make_query()
+void Request::make_query()
 {
 	size_t pos = this->_url.find("?");
 	if (pos != std::string::npos)

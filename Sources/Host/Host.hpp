@@ -1,11 +1,11 @@
-#ifndef SERVER_CLASS_HPP
-# define SERVER_CLASS_HPP
+#ifndef HOST_HPP
+# define HOST_HPP
 
-# include "webserv.hpp"
+# include "../webserv.hpp"
 
 // Variable globale dans laquelle tout va tourner
 // Peut être renommée Host, Global, Main
-class Server
+class Host
 {
 	public:
 		void				accept_client();
@@ -16,7 +16,7 @@ class Server
 		std::vector<Socket> get_socket_list() {return this->_sockets;}
 		std::vector<Client> get_client_list() {return this->_clients;}
 
-		std::vector<Servers*> servers;
+		std::vector<Server*> servers;
 
 		char **envp;
 
@@ -39,8 +39,8 @@ class Server
 		bool		kill_client(Client client);
 		bool		is_allowed(std::vector<std::string> methodlist, std::string methodreq);
 		bool		is_cgi(std::string filename);
-		void		POST_method(Client client, std::string url, Requete req);
-		bool		write_with_poll(std::string url, Client client, Requete req);
+		void		POST_method(Client client, std::string url, Request req);
+		bool		write_with_poll(std::string url, Client client, Request req);
 		bool		write_with_poll(std::string url, Client client, std::string str);
 		std::string	get_root_path(std::string url, int i);
 		Location*	get_location(std::string url, int i);

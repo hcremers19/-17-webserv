@@ -1,7 +1,7 @@
-#ifndef LOCATION_CLASS_HPP
-# define LOCATION_CLASS_HPP
+#ifndef LOCATION_HPP
+# define LOCATION_HPP
 
-# include "webserv.hpp"
+# include "../webserv.hpp"
 
 // Classe dans laquelle seront stockées les informations relatives à la directive location (expliquer)
 class Location

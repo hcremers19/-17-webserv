@@ -1,4 +1,4 @@
-#include "webserv.hpp"
+#include "../webserv.hpp"
 
 /* --------------------------------------------------------------------------------
 Renvoyer le chemin vers l'exécutable dans lequel lancer le script, en fonction de si l'extension du fichier est .py (Pyhton) ou .pl (Perl)
@@ -33,7 +33,7 @@ std::string search_exec(std::string filePwd)
 Attention, ce my_env n'eest pas le même que celui de la fonction exec_cgi
 Créer un nouvel environnement sous forme de vecteur, qui reprend toutes les valeurs de l'environnement dans lequel webserv est exécuté + des valeurs personnalisées relatives à la requête traitée actuellement
 -------------------------------------------------------------------------------- */
-void new_env(char** envp, Requete& req, std::vector<std::string>& my_env, Servers* serv)
+void new_env(char** envp, Request& req, std::vector<std::string>& my_env, Server* serv)
 {
 	size_t  i = 0;
 	while (envp[i])
@@ -86,7 +86,7 @@ Ressemble fort à microshell ou pipex : beaucoup de lignes pour simplement exéc
 
 Le texte généré par l'exécutable est récupéré et retourné à la fin de la fonction
 -------------------------------------------------------------------------------- */
-std::string exec_CGI(std::string filePwd, char** envp, Requete& req, Servers* serv)
+std::string exec_CGI(std::string filePwd, char** envp, Request& req, Server* serv)
 {
 	std::string execPwd = search_exec(filePwd);
 	if (execPwd == "")

@@ -1,9 +1,9 @@
-#include "webserv.hpp"
+#include "../webserv.hpp"
 
 /* --------------------------------------------------------------------------------
 Constructor
 -------------------------------------------------------------------------------- */
-Conf::Conf()
+Config::Config()
 {
 	this->_directives.push_back("server");
 	this->_directives.push_back("listen");
@@ -21,7 +21,7 @@ Conf::Conf()
 /* --------------------------------------------------------------------------------
 Destructor
 -------------------------------------------------------------------------------- */
-Conf::~Conf()
+Config::~Config()
 {
 	for (size_t i = 0; i < this->_servers.size(); i++)
 		delete this->_servers[i];
@@ -33,25 +33,25 @@ Conf::~Conf()
 
 /* --- ACCESSORS --- */
 
-std::vector<Servers*>	Conf::get_servers() const
+std::vector<Server*>	Config::get_servers() const
 {
 	return this->_servers;
 }
 
 /* --------------------------------------------------------------------------------
-Ajouter une première instance de la classe "Servers" dans le vecteur "_servers"
+Ajouter une première instance de la classe "Server" dans le vecteur "_servers"
 -------------------------------------------------------------------------------- */
-void	Conf::set_servers()
+void	Config::set_servers()
 {
-	this->_servers.push_back(new Servers());
+	this->_servers.push_back(new Server());
 }
 
 /* --- MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Vérifier que toutes les données stockées dans la classe Conf sont correctes
+Vérifier que toutes les données stockées dans la classe Config sont correctes
 -------------------------------------------------------------------------------- */
-void	Conf::check_data()
+void	Config::check_data()
 {
 	for (size_t i = 0; i < this->_servers.size(); i++)
 	{
@@ -81,7 +81,7 @@ void	Conf::check_data()
 /* --------------------------------------------------------------------------------
 Vérifier chaque ligne pour savoir s'il s'agit d'une directive ou non
 -------------------------------------------------------------------------------- */
-void	Conf::check_directive()
+void	Config::check_directive()
 {
 	std::size_t len = this->_file.size();
 
@@ -93,7 +93,7 @@ void	Conf::check_directive()
 Initier le vecteur "_filePos" qui reprend la position de la directive, s'il
 s'agit de location ou server
 -------------------------------------------------------------------------------- */
-void	Conf::init_file_pos()
+void	Config::init_file_pos()
 {
 	//0 = server; 1 = location;
 	size_t len =this->_file.size(), pos = 0;
@@ -116,7 +116,7 @@ void	Conf::init_file_pos()
 Déterminer si la ligne passée en argument est une directive ou non et si elle
 est correctement formatée
 -------------------------------------------------------------------------------- */
-void	Conf::is_directive(std::string line, int pos)
+void	Config::is_directive(std::string line, int pos)
 {
 	std::size_t count = count_words(line), len = this->_directives.size();
 	std::string word = ft_first_word(line);
@@ -141,7 +141,7 @@ void	Conf::is_directive(std::string line, int pos)
 Lire le fichier passé en argument et passer chaque ligne dans une entrée du vec-
 teur "_file"
 -------------------------------------------------------------------------------- */
-void	Conf::read_file(std::string name)
+void	Config::read_file(std::string name)
 {
 	std::ifstream file(name);
 	std::string output;
@@ -167,7 +167,7 @@ void	Conf::read_file(std::string name)
 Stocker toutes les informations du fichier de configuration dans les variables
 appropriées
 -------------------------------------------------------------------------------- */
-void	Conf::stock_data()
+void	Config::stock_data()
 {
 	int len = this->_file.size(), 
 		nb_server = -1, 
@@ -229,7 +229,7 @@ void	Conf::stock_data()
 /* --------------------------------------------------------------------------------
 Stocker les informations de la ligne "line" dans le serveur "server"
 -------------------------------------------------------------------------------- */
-void	Conf::stock_server(std::string line, Servers* server)
+void	Config::stock_server(std::string line, Server* server)
 {
 	std::size_t count = count_words(line);
 	std::string word = ft_first_word(line), last;

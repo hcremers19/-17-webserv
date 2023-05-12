@@ -25,15 +25,15 @@ VEL		= 	sleep
 
 INCLUDES	=	./includes
 
-SRCS		=	./srcs/main.cpp 			\
-				./srcs/Client.class.cpp 	\
-				./srcs/Requete.class.cpp \
-				./srcs/Conf.class.cpp	\
-				./srcs/Server.class.cpp	\
-				./srcs/Socket.class.cpp 	\
-				./srcs/cgi.cpp 			\
-				./srcs/Servers.class.cpp \
-				./srcs/Location.class.cpp 
+SRCS		=	Sources/CGI/CGI.cpp	\
+				Sources/Config/Config.cpp	\
+				Sources/Host/Host.cpp	\
+				Sources/HTML/Client.cpp	\
+				Sources/HTML/Request.cpp	\
+				Sources/Server/Location.cpp	\
+				Sources/Server/Server.cpp	\
+				Sources/Socket/Socket.cpp	\
+				Sources/main.cpp
 
 #-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
 
@@ -47,10 +47,10 @@ ${NAME} :
 	@${PRI} "${C_GREEN}$@ exec --> Successfully Built\n\n${C_DEFAUT}"
 		
 clean:
-
-fclean: clean
 	@${RM} ${NAME}
 	@${PRI} "\n${C_RED}Exec file deleted\n\n${C_DEFAUT}"
+
+fclean: clean
 
 re: fclean all
 

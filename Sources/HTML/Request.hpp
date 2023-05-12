@@ -1,14 +1,13 @@
-#ifndef REQUETE_CLASS_HPP
-# define REQUETE_CLASS_HPP
+#ifndef REQUEST_HPP
+# define REQUEST_HPP
 
-# include "webserv.hpp"
+# include "../webserv.hpp"
 
-// Peut être renomée Request
-class Requete
+class Request
 {
 	public:
-		Requete(char *requete);
-		~Requete();
+		Request(char *requete);
+		~Request();
 
 		size_t								get_len() const			{return this->_len;};
 		std::map<std::string, std::string>	get_header() const		{return this->_header;};

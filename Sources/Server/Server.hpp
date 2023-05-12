@@ -1,15 +1,15 @@
-#ifndef SERVERS_CLASS_HPP
-# define SERVERS_CLASS_HPP
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
-# include "webserv.hpp"
+# include "../webserv.hpp"
 
 // Classe qui contient toutes les informations relatives à un seul "sous-serveur", elle peut donc être instanciée plusieurs fois si le fichier de configuration demande plusieurs serveurs
 // Peut être renommée Server
-class Servers
+class Server
 {
 	public:
-		Servers();
-		~Servers();
+		Server();
+		~Server();
 
 		void set_listen(std::string word)					{this->_listen = word;}
 		void set_name(std::string word)						{this->_name = word;}

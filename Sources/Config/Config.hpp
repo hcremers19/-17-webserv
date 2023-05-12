@@ -1,16 +1,16 @@
-#ifndef CONF_CLASS_HPP
-# define CONF_CLASS_HPP
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
 
-# include "webserv.hpp"
+# include "../webserv.hpp"
 
 // Récupère les données du parsing, tout ce qui est configuré se retrouve ici 
-class Conf
+class Config
 {
 	public:
-		Conf();
-		~Conf();
+		Config();
+		~Config();
 
-		std::vector<Servers*>	get_servers() const;
+		std::vector<Server*>	get_servers() const;
 
 		void	check_data();
 		void	check_directive();
@@ -20,10 +20,10 @@ class Conf
 
 	private:
 		void	set_servers();
-		void	stock_server(std::string line, Servers* server);
+		void	stock_server(std::string line, Server* server);
 		void	is_directive(std::string line, int pos);
 
-		std::vector<Servers*>		_servers;
+		std::vector<Server*>		_servers;
 		std::vector<std::string>	_file;
 		std::vector<int>			_filePos;
 		std::vector<std::string>	_directives;

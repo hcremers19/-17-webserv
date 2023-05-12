@@ -1,9 +1,9 @@
-#include "webserv.hpp"
+#include "../webserv.hpp"
 
 /* --------------------------------------------------------------------------------
 Constructor
 -------------------------------------------------------------------------------- */
-Servers::Servers()
+Server::Server()
 {
 }
 
@@ -12,7 +12,7 @@ Destructor
 
 Vide les différents conteneurs qui ont été utilisés dans cette classe
 -------------------------------------------------------------------------------- */
-Servers::~Servers()
+Server::~Server()
 {
 	for (size_t i = 0; i < this->_locations.size(); i++)
 		delete this->_locations[i];
@@ -26,7 +26,7 @@ Servers::~Servers()
 /* --------------------------------------------------------------------------------
 Vérifier que la taille max du serveur (directive client_max_body_size, variable _bodySize) n'est pas supérieure à 2147483647 ou inférieure à 10
 -------------------------------------------------------------------------------- */
-bool Servers::check_client_size()
+bool Server::check_client_size()
 {
 	return (this->_bodySize.size() > 10) ? false : (atoi(this->_bodySize.c_str()) <= 2147483647);
 }
@@ -34,7 +34,7 @@ bool Servers::check_client_size()
 /* --------------------------------------------------------------------------------
 Vérifier que les données stockées dans les instances de la classe Location reprises dans le vecteur membre "_locations" ne sont pas vides
 -------------------------------------------------------------------------------- */
-bool Servers::check_locations()
+bool Server::check_locations()
 {
 	for (size_t i = 0; i < this->_locations.size(); i++)
 		if (this->_locations[i]->get_dir().empty() || this->_locations[i]->get_method().empty() || this->_locations[i]->get_root().empty() || this->_locations[i]->get_index().empty() || this->_locations[i]->get_listing().empty())
@@ -45,7 +45,7 @@ bool Servers::check_locations()
 /* --------------------------------------------------------------------------------
 Vérifier que toutes les locations ont bien un index
 -------------------------------------------------------------------------------- */
-bool Servers::check_index()
+bool Server::check_index()
 {
 	if (this->_index.find(".html") == std::string::npos)
 		return false;
@@ -62,7 +62,7 @@ bool Servers::check_index()
 /* --------------------------------------------------------------------------------
 Vérifier si le contenu de la variable _listing (dir_listing) est bien "on" ou "off"
 -------------------------------------------------------------------------------- */
-bool Servers::check_listing()
+bool Server::check_listing()
 {
 	if (this->_listing != "on" && this->_listing != "off")
 		return false;
@@ -75,7 +75,7 @@ bool Servers::check_listing()
 /* --------------------------------------------------------------------------------
 Vérifier que les méthodes autorisées sont POST, GET ou DELETE dans un serveur ou dans ses locations
 -------------------------------------------------------------------------------- */
-bool Servers::check_method()
+bool Server::check_method()
 {
 	for (size_t j = 0; j < this->_method.size(); j++)
 		if (this->_method[j] != "POST" &&  this->_method[j] != "GET" &&  this->_method[j] != "DELETE")
@@ -90,7 +90,7 @@ bool Servers::check_method()
 /* --------------------------------------------------------------------------------
 Vérifier que les éléments du map "_error" (les pages d'erreur) sont bien formatés (numéro d'erreur et extension .html)
 -------------------------------------------------------------------------------- */
-bool Servers::check_error_page()
+bool Server::check_error_page()
 {
 	std::map<std::string, std::string>::iterator it = this->_error.begin();
 	std::map<std::string, std::string>::iterator it_end = this->_error.end();
@@ -106,7 +106,7 @@ bool Servers::check_error_page()
 /* --------------------------------------------------------------------------------
 Vérifier que le contenu de la variable _root est correctement formatée
 -------------------------------------------------------------------------------- */
-bool Servers::check_root()
+bool Server::check_root()
 {
 	if (this->_root.length() <= 2)
 		return (this->_root == "./");
@@ -129,7 +129,7 @@ bool Servers::check_root()
 /* --------------------------------------------------------------------------------
 Stocker les informations de la ligne "line" dans le vecteur membre "_locations" à la position "pos"
 -------------------------------------------------------------------------------- */
-void Servers::stock_location(std::string line, int pos)
+void Server::stock_location(std::string line, int pos)
 {
 	std::string word = ft_first_word(line);
 	std::string last = ft_last_word(line);

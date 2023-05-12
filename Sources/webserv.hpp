@@ -15,19 +15,19 @@
 # include <unistd.h>
 # include <vector>
 
-# include "Requete.class.hpp"
-# include "Location.class.hpp"
-# include "Servers.class.hpp"
-# include "Conf.class.hpp"
-# include "cgi.hpp"
-# include "Client.class.hpp"
+# include "HTML/Request.hpp"
+# include "Server/Location.hpp"
+# include "Server/Server.hpp"
+# include "CGI/CGI.hpp"
+# include "Config/Config.hpp"
+# include "HTML/Client.hpp"
 # include "colors.hpp"
-# include "Socket.class.hpp"
-# include "Server.class.hpp"
+# include "Socket/Socket.hpp"
+# include "Host/Host.hpp"
 
 class Location;
-class Servers;
-class Conf;
+class Server;
+class Config;
 
 # define EXCEPTION public std::exception
 # define WHAT const char * what () const
