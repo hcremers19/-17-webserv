@@ -543,8 +543,6 @@ void Server::show_page(Client client, std::string dir, int code)
 		else if (ret == 0)
 			this->show_error_page(400, client);
 
-
-
 		int fd_r = open(dir.c_str(), O_RDONLY);									// ... Je comprends plus grand chose à partir d'ici jusqu'à la fin du fichier
 		if (fd_r < 0)
 		{
