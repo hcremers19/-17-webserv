@@ -9,7 +9,12 @@ et la structure "address"
 -------------------------------------------------------------------------------- */
 void Socket::setup(std::string port, std::string ip)
 {
-	int port_int = stoi(port);
+	int port_int;
+	if (!(std::istringstream(port) >> port_int))
+	{
+		perror("istringstream conversion failed: ");
+		exit(-1);
+	}
 	struct sockaddr_in address;
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = htonl(INADDR_ANY);

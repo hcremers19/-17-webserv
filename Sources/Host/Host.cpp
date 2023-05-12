@@ -145,10 +145,13 @@ void Host::handle_request()
 				size_t pos;
 				if ((pos = urlrcv.rfind("?")) != std::string::npos)				// Trouver un "?" dans l'URL   (???)
 				{
-					this->query = urlrcv.substr(pos, urlrcv.size());
+					this->query = urlrcv.substr(pos, urlrcv.size()); 
 					urlrcv = urlrcv.substr(0, pos);
 				}
-				if (requete.get_len() != std::string::npos && requete.get_len() > (size_t)stoi(this->servers[this->_clients[i].get_n_server()]->get_body_size())) // Vérifier que la requête n'est pas trop longue
+				std::string tmpstr;
+				int			tmpint; 
+				std::istringstream(this->servers[this->_clients[i].get_n_server()]->get_body_size()) >> tmpint;
+				if (requete.get_len() != std::string::npos && requete.get_len() > (size_t)tmpint) // Vérifier que la requête n'est pas trop longue
 				{
 					this->show_error_page(413, this->_clients[i]);
 					if (this->kill_client(this->_clients[i]))
@@ -408,18 +411,18 @@ en premier paramètre
 void Host::show_error_page(int err, Client& client)
 {
 	std::map<std::string, std::string> errpages = this->servers[client.get_n_server()]->get_error();
-	if (errpages.find(std::to_string(err)) != errpages.end())
+	if (errpages.find(ft_to_string<int>(err)) != errpages.end())
 	{
-		int fd = open(errpages[std::to_string(err)].c_str(), O_RDONLY);
+		int fd = open(errpages[ft_to_string<int>(err)].c_str(), O_RDONLY);
 		if (fd < 0)
 		{
 			std::cout << colors::on_bright_red << "Show error: " << this->_errors[err] << "!" << colors::reset << std::endl;
-			std::cout << colors::on_bright_red << "Pre-config error page doesn't exist: " << errpages[std::to_string(err)] << colors::reset << std::endl;
+			std::cout << colors::on_bright_red << "Pre-config error page doesn't exist: " << errpages[ft_to_string<int>(err)] << colors::reset << std::endl;
 			close(fd);
 			return;
 		}
 		close(fd);
-		this->show_page(client, errpages[std::to_string(err)], 200);
+		this->show_page(client, errpages[ft_to_string<int>(err)], 200);
 	}
 	else
 	{
@@ -427,7 +430,7 @@ void Host::show_error_page(int err, Client& client)
 		if (it != this->_errors.end())
 		{
 			std::cout << colors::on_bright_red << "Show error: " << it->second << "!" << colors::reset << std::endl;
-			std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + std::to_string(it->second.size()) + "\n\n" + it->second + "\n";
+			std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + ft_to_string<int>(it->second.size()) + "\n\n" + it->second + "\n";
 			int sendret = send(client.get_client_socket(), msg.c_str(), msg.size(), 0);
 			if (sendret < 0)
 				std::cout << "Client disconnected" << std::endl;
@@ -536,7 +539,7 @@ void Host::show_page(Client client, std::string dir, int code)
 
 		std::string type = find_type(dir);
 
-		std::string msg = "HTTP/1.1 " + this->_errors.find(code)->second + "\n" + "Content-Type: " + type + "\nContent-Length: " + std::to_string(lSize) + "\n\n"; // Concaténer toutes les infos du header de réponse HTTP dans une string
+		std::string msg = "HTTP/1.1 " + this->_errors.find(code)->second + "\n" + "Content-Type: " + type + "\nContent-Length: " + ft_to_string<int>(lSize) + "\n\n"; // Concaténer toutes les infos du header de réponse HTTP dans une string
 		int ret = send(client.get_client_socket(), msg.c_str(), msg.size(), 0);	// Envoyer la string générée sur le socket
 		if (ret < 0)
 			this->show_error_page(500, client);
@@ -821,4 +824,16 @@ bool is_request_done(char *request, size_t header_size, size_t sizereq)
 		return false;
 	}
 	return true;
+}
+
+/* --------------------------------------------------------------------------------
+Converts a numeric value to std::string.
+-------------------------------------------------------------------------------- */
+template<typename T>
+std::string ft_to_string(const T& x)
+{
+	std::ostringstream oss;
+
+	oss << x;
+	return (oss.str());
 }

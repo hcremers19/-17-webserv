@@ -48,7 +48,7 @@ void new_env(char** envp, Request& req, std::vector<std::string>& my_env, Server
 	if (!req.get_method().empty())
 		my_env.push_back("REQUEST_METHOD=" + req.get_method());
 	if (req.get_len())
-		my_env.push_back("CONTENT_LENGTH=" + std::to_string(req.get_len()));
+		my_env.push_back("CONTENT_LENGTH=" + ft_st_to_string(req.get_len()));
 	if (!req.get_protocol().empty())
 		my_env.push_back("SERVER_SOFTWARE=" + req.get_protocol());
 
@@ -190,4 +190,15 @@ std::string exec_CGI(std::string filePwd, char** envp, Request& req, Server* ser
 		return ret;																// Retourner le résultat final du script en une seule string comprenant toutes les lignes
 	}
 	return "";
+}
+
+/* --------------------------------------------------------------------------------
+Converts a size_t numeric value to std::string.
+-------------------------------------------------------------------------------- */
+std::string ft_st_to_string(size_t x)
+{
+	std::ostringstream oss;
+
+	oss << x;
+	return (oss.str());
 }

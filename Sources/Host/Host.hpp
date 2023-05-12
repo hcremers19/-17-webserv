@@ -54,4 +54,7 @@ bool		is_request_done(char *request, size_t header_size, size_t sizereq);
 char*		ft_strnstr(const char *haystack, const char *needle, size_t n);
 std::string find_type(std::string dir);
 
+template<typename T>
+std::string ft_to_string(const T& x);
+
 #endif /* HOST_HPP */
