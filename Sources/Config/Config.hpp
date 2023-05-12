@@ -35,4 +35,4 @@ int 		find_char(std::vector<std::string> file, char c, int start);
 std::string ft_first_word(std::string line);
 std::string	ft_last_word(std::string line);
 
-#endif
+#endif /* CONFIG_HPP */

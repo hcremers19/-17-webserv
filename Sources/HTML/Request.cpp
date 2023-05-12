@@ -63,8 +63,8 @@ void Request::make_POST(std::stringstream& ss)
 		{
 			if (!key.empty() && !line.empty() && key != token)
 			{
-				if (line.back() == ' ')											// C++11
-					line.pop_back(); //remove space								// C++11
+				if (ft_back(line) == ' ')
+					ft_pop_back(line); //remove space
 				this->_header.insert(std::pair<std::string, std::string>(key, line));
 				line.clear();
 			}
@@ -80,7 +80,7 @@ void Request::make_POST(std::stringstream& ss)
 			if (!key.empty() && key != token)
 			{
 				if (!line.empty())
-					line.pop_back(); //remove space								// C++11
+					ft_pop_back(line); //remove space
 				this->_header.insert(std::pair<std::string, std::string>(key, (line.empty()) ? token : line));
 			}
 			size_t pos_header = pos;
@@ -90,15 +90,15 @@ void Request::make_POST(std::stringstream& ss)
 				this->_body = this->_fullBody;
 			break;
 		}
-		else if (token.back() == ':')											// C++11
+		else if (ft_back(token) == ':')
 		{
 			if (!key.empty() && key != token)
 			{
-				if (line.back() == ' ')											// C++11
-					line.pop_back();											// C++11
+				if (ft_back(line) == ' ')
+					ft_pop_back(line);
 				this->_header.insert(std::pair<std::string, std::string>(key, line));
 			}
-			token.pop_back();													// C++11
+			ft_pop_back(token);
 			key = token;
 			line.clear();
 		}
@@ -120,15 +120,15 @@ void Request::make_GET(std::stringstream& ss)
 
 	while (ss >> token)
 	{
-		if (token.back() == ':')												// C++11
+		if (ft_back(token) == ':')
 		{
 			if (!key.empty() && !line.empty() && key != token)
 			{
-				if (line.back() == ' ')											// C++11
-					line.pop_back();											// C++11
+				if (ft_back(line) == ' ')
+					ft_pop_back(line);
 				this->_header.insert(std::pair<std::string, std::string>(key, line));
 			}
-			token.pop_back();													// C++11
+			ft_pop_back(token);
 			key = token;
 			line.clear();
 		}
@@ -137,8 +137,8 @@ void Request::make_GET(std::stringstream& ss)
 	}
 	if (!line.empty() && !key.empty())
 	{
-		if (line.back() == ' ')													// C++11
-			line.pop_back();													// C++11
+		if (ft_back(line) == ' ')
+			ft_pop_back(line);
 		this->_header.insert(std::pair<std::string, std::string>(key, line));
 	}
 }
@@ -151,4 +151,19 @@ void Request::make_query()
 	size_t pos = this->_url.find("?");
 	if (pos != std::string::npos)
 		this->_query= this->_url.substr(pos + 1);
+}
+
+/* --------------------------------------------------------------------------------
+Request utils
+-------------------------------------------------------------------------------- */
+
+char&	ft_back(std::string& str)
+{
+	return (str[str.size() - 1]);
+}
+
+void	ft_pop_back(std::string& str)
+{
+	if (!str.empty())
+    	str.resize(str.size() - 1);
 }

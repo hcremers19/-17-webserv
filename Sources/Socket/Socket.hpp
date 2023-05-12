@@ -18,4 +18,4 @@ class Socket
 
 };
 
-#endif
+#endif /* SOCKET_HPP */

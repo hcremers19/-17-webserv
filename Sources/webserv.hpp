@@ -48,4 +48,4 @@ class IndexLoc : EXCEPTION		{WHAT throw () {return ("Error: Missing index in loc
 class ListingErr : EXCEPTION	{WHAT throw () {return ("Error: Dir_listing must be on or off");} };
 class SizeErr : EXCEPTION		{WHAT throw () {return ("Error: Client size");} };
 
-#endif
+#endif /* WEBSERV_HPP */

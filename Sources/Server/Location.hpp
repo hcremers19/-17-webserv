@@ -33,4 +33,4 @@ class Location
 		std::string					_redir;
 };
 
-#endif
+#endif /* LOCATION_HPP */

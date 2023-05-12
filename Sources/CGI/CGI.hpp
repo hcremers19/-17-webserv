@@ -9,4 +9,4 @@ std::string	file_extention(std::string filePwd);
 std::string	search_exec(std::string filePwd);
 void		new_env(char** envp, Request& req, std::vector<std::string>& my_env, Server* serv);
 
-#endif
+#endif /* CGI_HPP */

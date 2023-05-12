@@ -40,4 +40,7 @@ class Request
 		std::string							_url;			// URL from Header
 };
 
-#endif
+char&	ft_back(std::string& str);
+void	ft_pop_back(std::string& str);
+
+#endif /* REQUEST_HPP */

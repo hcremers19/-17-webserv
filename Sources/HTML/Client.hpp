@@ -25,4 +25,4 @@ class Client
 
 };
 
-#endif
+#endif /* CLIENT_HPP */

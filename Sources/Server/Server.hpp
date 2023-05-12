@@ -53,4 +53,4 @@ class Server
 
 };
 
-#endif
+#endif /* SERVER_HPP */
