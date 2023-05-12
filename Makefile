@@ -41,10 +41,10 @@ all : ${NAME}
 
 ${NAME} :
 #	@${PRI} "\n${C_ORANGE}... compiling ...\n${C_DEFAUT}"
-	@${CC} ${FLAGS} -I ${INCLUDES} ${SRCS} -o ${NAME}
 	@${PRI} "${C_ORANGE}... compiling ...\n\n${C_DEFAUT}"
+	@${CC} ${FLAGS} -I ${INCLUDES} ${SRCS} -o ${NAME}
 #	@${VEL} 0.3
-	@${PRI} "${C_GREEN}$@ exec --> Successfully Build\n\n${C_DEFAUT}"
+	@${PRI} "${C_GREEN}$@ exec --> Successfully Built\n\n${C_DEFAUT}"
 		
 clean:
 

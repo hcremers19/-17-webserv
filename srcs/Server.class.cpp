@@ -248,7 +248,7 @@ void Server::GET_method(Client& client, std::string urlrcv)
 	}
 	else
 	{
-		// Si l'url reçu pointe vers un dossier, ... (comprendre ce que c'est le listing)
+		// Si l'url reçu pointe vers un dossier, et que le listing est activé, afficher la page de listing des fichiers
 		if (S_ISDIR(path_stat.st_mode))
 		{
 			std::cout << colors::on_bright_blue << "File is a directory!" << colors::reset << std::endl;
@@ -256,7 +256,7 @@ void Server::GET_method(Client& client, std::string urlrcv)
 			if (strcmp(urlrcv.c_str(), "/") == 0)
 				this->show_page(client, urlsend + this->servers[client.get_n_server()]->get_index(), 200);
 			else if (this->servers[client.get_n_server()]->get_listing() == "on" || (this->loc && this->loc->get_listing() == "on"))
-				this->rep_listing(client.get_client_socket(), urlrcv, urlsend, client);
+				this->directory_listing(client.get_client_socket(), urlrcv, urlsend, client);
 			else
 				this->show_error_page(404, client);
 		}
@@ -598,31 +598,35 @@ void Server::show_page(Client client, std::string dir, int code)
 }
 
 /* --------------------------------------------------------------------------------
-Se renseigner sur le listing
+Si l'url reçu pointe vers un dossier, et que le listing est activé, afficher la page de listing des fichiers
+
+Pas ouf comme façon de faire parce que la page à afficher est littéralement codée en html ici et ne permet aucune modification de style
+
+Les liens n'apparaissent pas dans le bon ordre mais je ne sais pas si c'est à cause de readdir qui le fait mal, ou s'il y a une erreur dans le code
 -------------------------------------------------------------------------------- */
-void Server::rep_listing(int socket, std::string path, std::string fullurl, Client client)
+void Server::directory_listing(int socket, std::string path, std::string fullurl, Client client)
 {
 	std::cout << colors::on_cyan << "Show repository listing" << colors::reset << std::endl;
 
-	DIR* dir;																	// Semble être l'équivalent de FILE pour les dossiers mais se renseigner quand même
-	struct dirent* ent;
+	DIR* dir;
+	struct dirent* entry;
 	std::string data;
 
-	std::string tosend = "HTTP/1.1 200 OK\n\n<!DOCTYPE html>\n<html>\n<body>\n<h1>" + path + "</h1>\n<pre>\n";
+	std::string response = "HTTP/1.1 200 OK\n\n<!DOCTYPE html>\n<html>\n<body>\n<h1>" + path + "</h1>\n<pre>\n";
 
-	if ((dir = opendir (fullurl.c_str())) != NULL)
+	if ((dir = opendir(fullurl.c_str())) != NULL)
 	{
-		while ((ent = readdir (dir)) != NULL)
-			tosend += "<a href=\"" + ((std::string(ent->d_name) == ".") ? std::string(path) : (std::string(path) + "/" + std::string(ent->d_name))) + "\">" + std::string(ent->d_name) + "</a>\n";
-		closedir (dir);
+		while ((entry = readdir(dir)) != NULL)
+			response += "<a href=\"" + ((std::string(entry->d_name) == ".") ? std::string(path) : (std::string(path) + "/" + std::string(entry->d_name))) + "\">" + std::string(entry->d_name) + "</a>\n";
+		closedir(dir);
 	}
 	else
 	{
-		perror ("Directory listing");
+		perror("Directory listing");
 		return;
 	}
-	tosend += "</pre>\n</body>\n</html>\n";
-	int r = send(socket, tosend.c_str(), tosend.size(), 0);
+	response += "</pre>\n</body>\n</html>\n";
+	int r = send(socket, response.c_str(), response.size(), 0);
 	if (r < 0)
 		this->show_error_page(500, client);
 	else if (r == 0)

@@ -34,7 +34,7 @@ class Server
 		void		DELETE_method(Client& client, std::string url);
 		void		show_error_page(int err, Client& client);
 		void		show_page(Client client, std::string dir, int code);
-		void		rep_listing(int socket, std::string path, std::string fullurl, Client client);
+		void		directory_listing(int socket, std::string path, std::string fullurl, Client client);
 		void		do_redir(Client client, std::string url);
 		bool		kill_client(Client client);
 		bool		is_allowed(std::vector<std::string> methodlist, std::string methodreq);
