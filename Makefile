@@ -15,7 +15,7 @@ NAME = webserv
 
 #-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
 
-FLAGS 	= 	-Wall -Wextra -Werror -std=c++11 -I includes							# flag c++98
+FLAGS 	= 	-Wall -Wextra -Werror -std=c++98 -I includes
 CC		= 	c++
 RM		= 	rm -f
 PRI		= 	printf

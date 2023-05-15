@@ -143,7 +143,7 @@ teur "_file"
 -------------------------------------------------------------------------------- */
 void	Config::read_file(std::string name)
 {
-	std::ifstream file(name);
+	std::ifstream file(name.c_str());
 	std::string output;
 
 	while (std::getline(file, output))
@@ -237,14 +237,14 @@ void	Config::stock_server(std::string line, Server* server)
 	if (count == 2)
 	{
 		last = ft_last_word(line);
-		std::map<std::string, std::string> settings = {
-			{"listen", server->get_listen()},
-			{"server_name", server->get_name()},
-			{"root", server->get_root()},
-			{"index", server->get_index()},
-			{"client_max_body_size", server->get_body_size()},
-			{"dir_listing", server->get_listing()}
-		};
+		std::map<std::string, std::string> settings;
+		settings.insert(std::make_pair("listen", server->get_listen()));
+		settings.insert(std::make_pair("server_name", server->get_name()));
+		settings.insert(std::make_pair("root", server->get_root()));
+		settings.insert(std::make_pair("index", server->get_index()));
+		settings.insert(std::make_pair("client_max_body_size", server->get_body_size()));
+		settings.insert(std::make_pair("dir_listing", server->get_listing()));
+
 
 		if (settings.find(word) != settings.end())
 		{

@@ -3,6 +3,7 @@
 
 # include <arpa/inet.h>
 # include <cstring>
+# include <cstdlib>
 # include <dirent.h>
 # include <fcntl.h>
 # include <fstream>
