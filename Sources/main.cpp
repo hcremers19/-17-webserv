@@ -49,11 +49,9 @@ void sig_handler(int signal)
 
 /* --------------------------------------------------------------------------------
 Fonction principale dans laquelle tourne webserv
+Appelle le parsing du fichier de configuration, initialise le host, récupère les signaux et lance la boucle principale où sont traitées les interactions avec le serveur
 
-data : Structure de configuration dans laquelle sont stockées plein de données
-temporairement, avant d'être exportées vers la variable globale
-
---> Devrait pouvoir être supprimée pour être directement intégrée à host
+data : Structure de configuration dans laquelle sont stockées plein de données temporairement, avant d'être exportées vers la variable globale
 -------------------------------------------------------------------------------- */
 int main(int ac, char **av, char **envp)
 {
@@ -69,14 +67,12 @@ int main(int ac, char **av, char **envp)
 		return (1);
 	}
 
-	host.servers = data.get_servers();
-	host.envp = envp; 															// Inclure l'environnement dans host, pourrait peut-être être déplacé dans une autre fonction
-	host.init_server();
+	host.init_host(envp, &data);
 	signal(SIGINT, sig_handler);
 
-	while (19)																	// Boucle principale dans laquelle sera traitée chaque interaction avec le serveur
+	while (19)
 	{
-		host.wait_client();														// Séparer les fonctions relatives à ces 3 lignes dans des fichiers différents ?
+		host.wait_client();
 		host.accept_client();
 		host.handle_request();
 	}

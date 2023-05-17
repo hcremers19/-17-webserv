@@ -10,9 +10,8 @@ class Host
 	public:
 		void				accept_client();
 		void				handle_request();
-		void				init_server();
-		// bool	is_timeout(Client client);										// Undefined
 		void				wait_client();
+		void				init_host(char** env, Config* data);
 		std::vector<Socket> get_socket_list() {return this->_sockets;}
 		std::vector<Client> get_client_list() {return this->_clients;}
 

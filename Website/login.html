@@ -30,10 +30,28 @@
 			position: absolute;
 			bottom: 0;
 		}
+
+		.back-link {
+			display: inline-block;
+			position: absolute;
+			top: 0;
+			left: 0;
+			padding: 1rem;
+			margin: 1rem;
+			color: #000000;
+			text-decoration: none;
+			font-size: 1.2rem;
+		}
+
+		.back-link:hover {
+			text-decoration: underline;
+		}
 	</style>
 </head>
 
 <body>
+	<a href="index.html" class="back-link">&lt; Back</a>
+
 	<h2><br>WebServ Login<br></h2>
 
 	<form action="cgi_bin/showinfo.py" method="get">
