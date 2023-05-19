@@ -3,7 +3,9 @@
 
 # include "../webserv.hpp"
 
-// Récupère les données du parsing, tout ce qui est configuré se retrouve ici 
+/* --------------------------------------------------------------------------------
+Gets the data from the parsing, everything that is configured is found here
+-------------------------------------------------------------------------------- */
 class Config
 {
 	public:
@@ -16,11 +18,11 @@ class Config
 		void	check_directive();
 		void	init_file_pos();
 		void	read_file(std::string name);
-		void	stock_data();
+		void	store_data();
 
 	private:
 		void	set_servers();
-		void	stock_server(std::string line, Server* server);
+		void	store_server(std::string line, Server* server);
 		void	is_directive(std::string line, int pos);
 
 		std::vector<Server*>		_servers;

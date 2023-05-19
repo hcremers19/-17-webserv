@@ -1,15 +1,16 @@
 #include "webserv.hpp"
 
 /* --------------------------------------------------------------------------------
-Variable globale dans laquelle vont tourner la plupart des autres variables
+Global variable in which most other variables will run
 -------------------------------------------------------------------------------- */
 Host host;
 
 /* --------------------------------------------------------------------------------
-Fonction principale du parsing du fichier de configuration
-Vérifie d'abord si le fichier passé en argument est valide, puis appelle toutes les autres fonctions servant à stocker les informations du fichier de configuration dans la classe Config
+Main function of the configuration file parsing
+First checks if the file passed as argument is valid, then calls all the other
+functions used to store the configuration file information in the Config class
 -------------------------------------------------------------------------------- */
-void parsing(int argc, char **argv, Config& data)
+void parsing(int argc, char** argv, Config& data)
 {
 	if (argc != 2)
 		throw ArgvErr();
@@ -19,19 +20,19 @@ void parsing(int argc, char **argv, Config& data)
 		throw ArgvErr();
 
 	std::string name = std::string(argv[1]);
-	if (name.find(".conf") == std::string::npos) // npos == -1 in size_t
+	if (name.find(".conf") == std::string::npos)
 		throw ArgvErr();
 
 	data.read_file(argv[1]);
 	data.init_file_pos();
 	data.check_directive();
-	data.stock_data();
+	data.store_data();
 	data.check_data();
 }
 
 /* --------------------------------------------------------------------------------
-Gérer Ctrl+C : fermer tous les sockets ouverts (d'écoute ou de requête) et fer-
-mer proprement le programme
+Manage Ctrl+C: close all open sockets (listening or request) and close the pro-
+gram cleanly
 -------------------------------------------------------------------------------- */
 void sig_handler(int signal)
 {
@@ -48,12 +49,15 @@ void sig_handler(int signal)
 }
 
 /* --------------------------------------------------------------------------------
-Fonction principale dans laquelle tourne webserv
-Appelle le parsing du fichier de configuration, initialise le host, récupère les signaux et lance la boucle principale où sont traitées les interactions avec le serveur
+Main function in which webserv runs
+Calls the parsing of the configuration file, initializes the host, retrieves the
+signals and launches the main loop where the interactions with the server are
+processed
 
-data : Structure de configuration dans laquelle sont stockées plein de données temporairement, avant d'être exportées vers la variable globale
+data : Configuration structure in which a lot of data are stored temporarily,
+before being exported to the global variable
 -------------------------------------------------------------------------------- */
-int main(int ac, char **av, char **envp)
+int main(int ac, char** av, char** envp)
 {
 	Config data;
 

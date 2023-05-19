@@ -2,6 +2,8 @@
 
 /* --------------------------------------------------------------------------------
 Constructor
+
+Setup all directives that can be configured in the configuration file
 -------------------------------------------------------------------------------- */
 Config::Config()
 {
@@ -20,6 +22,8 @@ Config::Config()
 
 /* --------------------------------------------------------------------------------
 Destructor
+
+Clear and delete all the containers that have been created
 -------------------------------------------------------------------------------- */
 Config::~Config()
 {
@@ -31,6 +35,7 @@ Config::~Config()
 	this->_directives.clear();
 }
 
+
 /* --- ACCESSORS --- */
 
 std::vector<Server*>	Config::get_servers() const
@@ -39,24 +44,25 @@ std::vector<Server*>	Config::get_servers() const
 }
 
 /* --------------------------------------------------------------------------------
-Ajouter une première instance de la classe "Server" dans le vecteur "_servers"
+Add a first instance of the Server class to the _servers vector
 -------------------------------------------------------------------------------- */
 void	Config::set_servers()
 {
 	this->_servers.push_back(new Server());
 }
 
+
 /* --- MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Vérifier que toutes les données stockées dans la classe Config sont correctes
+Check that all data stored in the Config class are correct
 -------------------------------------------------------------------------------- */
 void	Config::check_data()
 {
 	for (size_t i = 0; i < this->_servers.size(); i++)
 	{
 		if (this->_servers[i]->get_name().empty() || this->_servers[i]->get_listen().empty() || this->_servers[i]->get_root().empty()
-			|| this->_servers[i]->get_index().empty() || this->_servers[i]->get_method().empty()  || this->_servers[i]->get_body_size().empty()
+			|| this->_servers[i]->get_index().empty() || this->_servers[i]->get_method().empty() || this->_servers[i]->get_body_size().empty()
 			|| this->_servers[i]->get_listing().empty())
 			throw DirMissing();
 		if (!this->_servers[i]->check_locations())
@@ -79,7 +85,7 @@ void	Config::check_data()
 }
 
 /* --------------------------------------------------------------------------------
-Vérifier chaque ligne pour savoir s'il s'agit d'une directive ou non
+Check each line to see if it is a directive or not
 -------------------------------------------------------------------------------- */
 void	Config::check_directive()
 {
@@ -90,14 +96,15 @@ void	Config::check_directive()
 }
 
 /* --------------------------------------------------------------------------------
-Initier le vecteur "_filePos" qui reprend la position de la directive, s'il
-s'agit de location ou server
+Initialize the "_filePos" vector which takes the position of the directive, if
+it is location or server
+
+0 = server, 1 = location
 -------------------------------------------------------------------------------- */
 void	Config::init_file_pos()
 {
-	//0 = server; 1 = location;
-	size_t len =this->_file.size(), pos = 0;
-	std::string word;
+	size_t		len = this->_file.size(), pos = 0;
+	std::string	word;
 
 	for (size_t i = 0; i < len; i++)
 	{
@@ -113,8 +120,10 @@ void	Config::init_file_pos()
 }
 
 /* --------------------------------------------------------------------------------
-Déterminer si la ligne passée en argument est une directive ou non et si elle
-est correctement formatée
+Determine if the line passed in argument is a directive or not and if it is cor-
+rectly formatted
+
+0 = server, 1 = location
 -------------------------------------------------------------------------------- */
 void	Config::is_directive(std::string line, int pos)
 {
@@ -129,7 +138,7 @@ void	Config::is_directive(std::string line, int pos)
 				throw MissingArgv();
 			else if (count >= 3 && word != "error_page")
 				throw TooMuchArgv();
-			else if ((this->_filePos[pos] == 1 && (word == "listen" || word == "client_max_body_size" || word == "server_name")) || (this->_filePos[pos] == 0 && (word == "redir"))) // 0 == server, 1 == location
+			else if ((this->_filePos[pos] == 1 && (word == "listen" || word == "client_max_body_size" || word == "server_name")) || (this->_filePos[pos] == 0 && (word == "redir")))
 				throw DirWrongPlace();
 			return;
 		}
@@ -138,8 +147,8 @@ void	Config::is_directive(std::string line, int pos)
 }
 
 /* --------------------------------------------------------------------------------
-Lire le fichier passé en argument et passer chaque ligne dans une entrée du vec-
-teur "_file"
+Read the file passed as argument and pass each line in an entry of the vector
+"_file".
 -------------------------------------------------------------------------------- */
 void	Config::read_file(std::string name)
 {
@@ -164,10 +173,9 @@ void	Config::read_file(std::string name)
 }
 
 /* --------------------------------------------------------------------------------
-Stocker toutes les informations du fichier de configuration dans les variables
-appropriées
+Store all information from the configuration file in the appropriate variables
 -------------------------------------------------------------------------------- */
-void	Config::stock_data()
+void	Config::store_data()
 {
 	int len = this->_file.size(), 
 		nb_server = -1, 
@@ -191,7 +199,7 @@ void	Config::stock_data()
 				else if (new_open != -1 && new_open < close)
 					throw DirMissing();
 				
-				this->set_servers(); // New server
+				this->set_servers();
 				nb_server++;
 				nb_locations = -1;
 				status = 0;
@@ -199,7 +207,7 @@ void	Config::stock_data()
 			else if (ft_first_word(this->_file[i]) == "}")
 				status = 1;
 			else if (!status)
-				this->stock_server(this->_file[i], this->_servers[nb_server]);
+				this->store_server(this->_file[i], this->_servers[nb_server]);
 		}
 		else
 		{
@@ -227,9 +235,9 @@ void	Config::stock_data()
 }
 
 /* --------------------------------------------------------------------------------
-Stocker les informations de la ligne "line" dans le serveur "server"
+Store the information of the line "line" in the server "server"
 -------------------------------------------------------------------------------- */
-void	Config::stock_server(std::string line, Server* server)
+void	Config::store_server(std::string line, Server* server)
 {
 	std::size_t count = count_words(line);
 	std::string word = ft_first_word(line), last;
@@ -244,7 +252,6 @@ void	Config::stock_server(std::string line, Server* server)
 		settings.insert(std::make_pair("index", server->get_index()));
 		settings.insert(std::make_pair("client_max_body_size", server->get_body_size()));
 		settings.insert(std::make_pair("dir_listing", server->get_listing()));
-
 
 		if (settings.find(word) != settings.end())
 		{
@@ -277,13 +284,13 @@ void	Config::stock_server(std::string line, Server* server)
 			if (line.find(token) != line.rfind(last) && token != word)
 				server->set_error(token, last);
 	}
-
 }
+
 
 /* --- NON-MEMBER FUNCTION --- */
 
 /* --------------------------------------------------------------------------------
-Vérifier si la string "word" est composée uniquement d'ints ou pas
+Check if the string "word" is composed only of ints or not
 -------------------------------------------------------------------------------- */
 bool	is_digit_str(std::string word)
 {
@@ -295,7 +302,7 @@ bool	is_digit_str(std::string word)
 }
 
 /* --------------------------------------------------------------------------------
-Compter le nombre de mots dans la ligne "sentence"
+Count the number of words in the "sentence" line
 -------------------------------------------------------------------------------- */
 int		count_words(std::string sentence)
 {
@@ -310,8 +317,8 @@ int		count_words(std::string sentence)
 }
 
 /* --------------------------------------------------------------------------------
-Fonction non-membre qui permet de retrouver le caractère "c" dans toutes les
-strings du vecteur "file", à partir de la position "start"
+Non-member function that finds c in all strings of the vector "file", starting
+from the "start" position
 -------------------------------------------------------------------------------- */
 int 	find_char(std::vector<std::string> file, char c, int start = 0)
 {
@@ -329,7 +336,7 @@ int 	find_char(std::vector<std::string> file, char c, int start = 0)
 }
 
 /* --------------------------------------------------------------------------------
-Retourner le premier mot de la ligne "line"
+Return the first word of the line "line"
 -------------------------------------------------------------------------------- */
 std::string ft_first_word(std::string line)
 {
@@ -341,7 +348,7 @@ std::string ft_first_word(std::string line)
 }
 
 /* --------------------------------------------------------------------------------
-Retourner le dernier mot de la ligne "line"
+Return the last word of the line "line"
 -------------------------------------------------------------------------------- */
 std::string ft_last_word(std::string line)
 {

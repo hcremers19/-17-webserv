@@ -2,7 +2,7 @@ use CGI;
 
 my $q = CGI->new;
 
-my $lightweight_fh  = $q->upload('file1');
+my $lightweight_fh = $q->upload('file1');
 my $filename = $q->param('file1');
 
 my $dir = 'uploads/';

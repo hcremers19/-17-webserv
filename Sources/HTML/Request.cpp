@@ -3,19 +3,22 @@
 /* --------------------------------------------------------------------------------
 Constructor
 
-Reçoit la requête sous forme de chaîne de caractères et parse ses différentes informations pour initialiser les différentes variables de la classe
+Receive the request as a string and parse its different information to initial-
+ize the different variables of the class
 -------------------------------------------------------------------------------- */
-Request::Request(char *requete)
+Request::Request(const char* rqst)
 {
-	// std::ofstream MyFile("my_input.txt");
-	// MyFile << requete;
-	// MyFile.close();
-	this->_charRequest = requete;
-	std::stringstream ss(requete);
-	this->_request = requete;
+	this->_requestChar = (char*)rqst;
+
+	std::stringstream ss(rqst);
+
+	this->_request = rqst;
 	this->_len = 0;
+
 	ss >> this->_method >> this->_url >> this->_protocol;
+
 	this->make_query();
+
 	if (this->_method == "GET")
 		this->make_GET(ss);
 	else if (this->_method == "POST")
@@ -30,33 +33,44 @@ Request::~Request()
 	this->_header.clear();
 }
 
+
 /* --- MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Vérifier que la méthode est correcte (GET, POST ou DELETE)
+Check that the method is correct (GET, POST or DELETE), otherwise, return error
+405
+Then check that the protocol is correct, otherwise return error 505
 -------------------------------------------------------------------------------- */
-int Request::check_method()
+int Request::check_method_and_protocol()
 {
-	return ((this->_method != "POST" && this->_method != "GET" && this->_method != "DELETE") ? 405 : ((this->_protocol != "HTTP/1.1") ? 505 : -1));
+	return
+	(
+		(
+			this->_method != "POST"
+			&& this->_method != "GET"
+			&& this->_method != "DELETE") ?
+				405 : ((this->_protocol != "HTTP/1.1") ?
+					505 : -1
+		)
+	);
 }
 
 /* --------------------------------------------------------------------------------
-Pas compris
-
-Décortiquer la méthode POST ?
-
-Coder soi-même les fonctions c++11
-S'assurer qu'on est ok avec les opérateurs >>
+If the request method is POST, store all relevant information from the HTTP re-
+quest header in the _header map and in the private attributes of the class
 -------------------------------------------------------------------------------- */
 void Request::make_POST(std::stringstream& ss)
 {
-	std::string token, line, key;
-	std::string buff;
-	size_t pos = this->_request.find("\r\n\r\n");
+	std::string	token;
+	std::string	line;
+	std::string	key;
+	std::string	buff;
+	size_t		pos = this->_request.find("\r\n\r\n");
 
 	while (ss >> token)
 	{
-		// std::cout << "Token = " << token << std::endl;
+		std::cout << colors::bright_magenta << "Token = " << token << colors::reset << std::endl;
+
 		if (token.find("boundary=") != std::string::npos)
 			this->_boundary = token.substr(token.find("boundary=") + 9);
 		if (token == "Content-Length:")
@@ -64,7 +78,7 @@ void Request::make_POST(std::stringstream& ss)
 			if (!key.empty() && !line.empty() && key != token)
 			{
 				if (ft_back(line) == ' ')
-					ft_pop_back(line); //remove space
+					ft_pop_back(line);
 				this->_header.insert(std::pair<std::string, std::string>(key, line));
 				line.clear();
 			}
@@ -80,14 +94,15 @@ void Request::make_POST(std::stringstream& ss)
 			if (!key.empty() && key != token)
 			{
 				if (!line.empty())
-					ft_pop_back(line); //remove space
+					ft_pop_back(line);
 				this->_header.insert(std::pair<std::string, std::string>(key, (line.empty()) ? token : line));
 			}
-			size_t pos_header = pos;
-			while (pos < this->_len + pos_header) // || _request[pos + 1]
-				this->_fullBody += this->_charRequest[pos++];
+			size_t posHeader = pos;
+
+			while (pos < this->_len + posHeader)
+				this->_bodyFull += this->_requestChar[pos++];
 			if (this->_boundary.empty())
-				this->_body = this->_fullBody;
+				this->_body = this->_bodyFull;
 			break;
 		}
 		else if (ft_back(token) == ':')
@@ -103,16 +118,13 @@ void Request::make_POST(std::stringstream& ss)
 			line.clear();
 		}
 		else
-		{
 			line += ((line.empty()) ? "" : " ") + token;
-		}
 	}
 }
 
 /* --------------------------------------------------------------------------------
-Pas compris
-
-Décortiquer la requête GET ?
+If the request method is POST, store all relevant information from the HTTP re-
+quest header in the _header map
 -------------------------------------------------------------------------------- */
 void Request::make_GET(std::stringstream& ss)
 {
@@ -144,7 +156,7 @@ void Request::make_GET(std::stringstream& ss)
 }
 
 /* --------------------------------------------------------------------------------
-Isoler la query
+Isolate the query
 -------------------------------------------------------------------------------- */
 void Request::make_query()
 {
@@ -153,10 +165,12 @@ void Request::make_query()
 		this->_query= this->_url.substr(pos + 1);
 }
 
+
 /* --- NON MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Reproduire le fonctionnement de la fonction C++11 std::string.back()
+Replicate the functioning of the C++11 function std::string.back()
+Returns a reference to the last character of the string
 -------------------------------------------------------------------------------- */
 char&	ft_back(std::string& str)
 {
@@ -164,10 +178,11 @@ char&	ft_back(std::string& str)
 }
 
 /* --------------------------------------------------------------------------------
-Reproduire le fonctionnement de la fonction C++11 std::string.pop_back()
+Replicate the functioning of the C++11 function std::string.pop_back()
+Erases the last character of the string, effectively reducing its length by one
 -------------------------------------------------------------------------------- */
 void	ft_pop_back(std::string& str)
 {
 	if (!str.empty())
-    	str.resize(str.size() - 1);
+		str.resize(str.size() - 1);
 }

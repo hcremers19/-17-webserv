@@ -1,10 +1,14 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# define MAX_REQUEST_SIZE 65536													// Pourquoi ce nombre ?
+# define MAX_REQUEST_SIZE 65536
 
 # include "../webserv.hpp"
 
+/* --------------------------------------------------------------------------------
+Class that contains the information of the client that sent the HTTP request to
+the server
+-------------------------------------------------------------------------------- */
 class Client
 {
 	public:

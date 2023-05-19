@@ -10,7 +10,7 @@ Server::Server()
 /* --------------------------------------------------------------------------------
 Destructor
 
-Vide les différents conteneurs qui ont été utilisés dans cette classe
+Empty and delete the various containers that have been used in this class
 -------------------------------------------------------------------------------- */
 Server::~Server()
 {
@@ -21,29 +21,35 @@ Server::~Server()
 	this->_error.clear();
 }
 
+
 /* --- MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Vérifier que la taille max du serveur (directive client_max_body_size, variable _bodySize) n'est pas supérieure à 2147483647 ou inférieure à 10
+Check that the max size of the server (directive client_max_body_size, variable
+_bodySize) is not greater than 2147483647
 -------------------------------------------------------------------------------- */
 bool Server::check_client_size()
 {
-	return (this->_bodySize.size() > 10) ? false : (atoi(this->_bodySize.c_str()) <= 2147483647);
+	return (atoi(this->_bodySize.c_str()) <= 2147483647);
 }
 
 /* --------------------------------------------------------------------------------
-Vérifier que les données stockées dans les instances de la classe Location reprises dans le vecteur membre "_locations" ne sont pas vides
+Check that the data stored in the member vector "_locations" are not empty
 -------------------------------------------------------------------------------- */
 bool Server::check_locations()
 {
 	for (size_t i = 0; i < this->_locations.size(); i++)
-		if (this->_locations[i]->get_dir().empty() || this->_locations[i]->get_method().empty() || this->_locations[i]->get_root().empty() || this->_locations[i]->get_index().empty() || this->_locations[i]->get_listing().empty())
+		if (this->_locations[i]->get_dir().empty()
+			|| this->_locations[i]->get_method().empty()
+			|| this->_locations[i]->get_root().empty()
+			|| this->_locations[i]->get_index().empty()
+			|| this->_locations[i]->get_listing().empty())
 			return false;
 	return true;
 }
 
 /* --------------------------------------------------------------------------------
-Vérifier que toutes les locations ont bien un index
+Check that all locations have an index
 -------------------------------------------------------------------------------- */
 bool Server::check_index()
 {
@@ -60,7 +66,8 @@ bool Server::check_index()
 }
 
 /* --------------------------------------------------------------------------------
-Vérifier si le contenu de la variable _listing (dir_listing) est bien "on" ou "off"
+Check that the content of the variable _listing (dir_listing) is not different
+from "on" or "off"
 -------------------------------------------------------------------------------- */
 bool Server::check_listing()
 {
@@ -73,38 +80,41 @@ bool Server::check_listing()
 }
 
 /* --------------------------------------------------------------------------------
-Vérifier que les méthodes autorisées sont POST, GET ou DELETE dans un serveur ou dans ses locations
+Check that the methods that have been defined are not other than GET, POST or
+DELETE
 -------------------------------------------------------------------------------- */
 bool Server::check_method()
 {
 	for (size_t j = 0; j < this->_method.size(); j++)
-		if (this->_method[j] != "POST" &&  this->_method[j] != "GET" &&  this->_method[j] != "DELETE")
+		if (this->_method[j] != "POST" && this->_method[j] != "GET" && this->_method[j] != "DELETE")
 			return false;
 	for (size_t i = 0; i < this->_locations.size(); i++)
 		for (size_t j = 0; j < this->_locations[i]->get_method().size(); j++)
-			if (this->_locations[i]->get_method()[j] != "POST" && this->_locations[i]->get_method()[j] != "GET" && this->_locations[i]->get_method()[j] != "DELETE")
+			if (this->_locations[i]->get_method()[j] != "POST"
+				&& this->_locations[i]->get_method()[j] != "GET"
+				&& this->_locations[i]->get_method()[j] != "DELETE")
 				return false;
 	return true;
 }
 
 /* --------------------------------------------------------------------------------
-Vérifier que les éléments du map "_error" (les pages d'erreur) sont bien formatés (numéro d'erreur et extension .html)
+Check that the elements of the "_error" map (the error pages) are well formatted
+(error number and .html extension)
 -------------------------------------------------------------------------------- */
 bool Server::check_error_page()
 {
 	std::map<std::string, std::string>::iterator it = this->_error.begin();
 	std::map<std::string, std::string>::iterator it_end = this->_error.end();
-	while (it != it_end)
+	for (; it != it_end; it++)
 	{
 		if (!is_digit_str(it->first) || (it->second).find(".html") == std::string::npos)
 			return false;
-		it++;
 	}
 	return true;
 }
 
 /* --------------------------------------------------------------------------------
-Vérifier que le contenu de la variable _root est correctement formatée
+Check that the content of the _root variable is correctly formatted
 -------------------------------------------------------------------------------- */
 bool Server::check_root()
 {
@@ -127,7 +137,8 @@ bool Server::check_root()
 }
 
 /* --------------------------------------------------------------------------------
-Stocker les informations de la ligne "line" dans le vecteur membre "_locations" à la position "pos"
+Store the information of the line "line" in the member vector "_locations" at
+the position "pos"
 -------------------------------------------------------------------------------- */
 void Server::stock_location(std::string line, int pos)
 {

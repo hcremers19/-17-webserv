@@ -12,10 +12,11 @@ int		Client::get_n_server() const
 	return this->_nServer;
 }
 
+
 /* --- MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Initialiser les informations de base de la classe Client
+Initialize the basic information of the Client class
 -------------------------------------------------------------------------------- */
 void	Client::init(int i)
 {
@@ -25,14 +26,13 @@ void	Client::init(int i)
 }
 
 /* --------------------------------------------------------------------------------
-Initialiser la variable _clientSocket avec le retour de accept() et la configu-
-rer en mode non-bloquant
+Initialize the _clientSocket variable with the return of accept()
+--> a fd, that of the socket associated with this client
+Set the socket to non-blocking mode
 -------------------------------------------------------------------------------- */
 void	Client::set_socket_client(int sock)
 {
 	this->_clientSocket = sock;
 
 	fcntl(this->_clientSocket, F_SETFL, O_NONBLOCK);
-	// if (setsockopt(this->_clientSocket, SOL_SOCKET, SO_RCVTIMEO, NULL, 0) < 0)
-	//     return;
 }

@@ -3,7 +3,9 @@
 /* --- MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Utiliser la fonction FD_SET() pour ajouter à l'ensemble de fd le socket passé en paramètre et puis mettre à jour le fd max pour qu'il ne soit pas plus petit que la valeur du fd du socket en question
+Use the FD_SET() function to add to the set of fd's the socket passed in parame-
+ter, and then update the fd max so that it is not smaller than the fd value of
+the socket in question
 -------------------------------------------------------------------------------- */
 void Host::add_to_wait(int socket, fd_set* set)
 {
@@ -13,9 +15,9 @@ void Host::add_to_wait(int socket, fd_set* set)
 }
 
 /* --------------------------------------------------------------------------------
-Récupérer les ensembles de sockets de lecture et d'écriture
-Utiliser select() pour les surveiller en attendant que l'un d'entre eux soit prêt à être lu ou écrit
-Mettre à jour les attributs membres fd_set de lecture et d'écriture si aucune erreur ne s'est produite
+Get the sets of read and write sockets
+Use select() to monitor them until one of them is ready to be read or written
+Update the read and write fd_set member attributes if no errors have occurred
 -------------------------------------------------------------------------------- */
 void Host::select_fd(fd_set* read, fd_set* write)
 {
@@ -29,8 +31,10 @@ void Host::select_fd(fd_set* read, fd_set* write)
 }
 
 /* --------------------------------------------------------------------------------
-Initialiser les ensembles de fd fd_set qui regroupent les fd des sockets d'écoute de chacun des serveurs du programme, et qui permettront de gérer ces fd avec select() pour déterminer s'il sont prêts à être utilisés
-On les envoie ensuite dans add_to_wait() et select_fd() pour les mettre d'ores et déjà en attente
+Initialize the fd sets fd_set which gather the fds of the listening sockets of
+each server of the program, and which will allow to manage these fds with
+select() to determine if they are ready to be used
+We then send them to add_to_wait() and select_fd() to put them already on hold
 -------------------------------------------------------------------------------- */
 void Host::wait_client()
 {
@@ -39,15 +43,17 @@ void Host::wait_client()
 
 	FD_ZERO(&read);
 	FD_ZERO(&write);
-	for (size_t i = 0; i < this->_sockets.size(); i++) // Set fd of server
+	for (size_t i = 0; i < this->_sockets.size(); i++)
 		this->add_to_wait(this->_sockets[i].get_server_socket(), &read);
-	for (size_t i = 0; i < this->_clients.size(); i++) // Set fd of server
+	for (size_t i = 0; i < this->_clients.size(); i++)
 		this->add_to_wait(this->_clients[i].get_client_socket(), &read);
 	this->select_fd(&read, &write);
 }
 
 /* --------------------------------------------------------------------------------
-Accepter le client, configurer sa classe, l'enregistrer dans _clients
+Accept the client, configure its class, register it in _clients
+
+--> Register the fd of the socket assigned to this client
 -------------------------------------------------------------------------------- */
 void Host::accept_client()
 {
@@ -67,30 +73,30 @@ void Host::accept_client()
 				perror("Connect");
 				exit(-1);
 			}
-			std::cout << colors::green << "New connection!" << colors::reset << std::endl; // Tim
+			std::cout << colors::green << "New connection!" << colors::reset << std::endl;
 		}
 	}
 }
 
 /* --------------------------------------------------------------------------------
-Fonction principale de gestion des requêtes reçues
+Main function of management of received requests
 
-Pour chaque client actif :
-- FD_ISSET() : Vérifier que le fd de lecture a bien été set
-- Recevoir la requête avec recv() et stocker sa taille
-- Calculer la taille du header pour pouvoir l'isoler du body, puis tuer le client si la requête est de taille nulle
-- Une fois qu'on est sûr d'avoir toute la requête (is_request_done()) :
-	- Construire la classe Request avec les infos nécessaires
-	- Vérfier la méthode demandée : check_method()
-	- Traiter l'URL en isolant la query s'il y en a une
-	- Vérifier si la taille de la requête n'est pas trop grande
-	- Obtenir l'emplacement du fichier pointé par l'url
-	- Vérifier si la méthode est autorisée ou pas
-	- Vérifier si le fichier à traiter est pris en charge par notre serveur
-	- Exécuter le script CGI en lui envoyant l'URL modifiée en fonction du chemin vers root
-	- Envoyer le résultat du CGI sur le socket avec send() afin qu'il soit affiché
-	- Traiter les redirections avec do_redir()
-	- Effacer ce que le serveur sait du client et fermer son socket puisqu'il ne lui sera plus nécessaire
+For each active client:
+- FD_ISSET(): Check that the read fd has been set
+- Receive the request with recv() and store its size
+- Calculate the size of the header to be able to isolate it from the body, then kill the client if the size of the request is null
+- Once we are sure to have the whole request (is_request_done()):
+	- Build the Request class with the necessary information
+	- Check the method called: check_method()
+	- Process the URL by isolating the query if there is one
+	- Check if the size of the request is not too big
+	- Get the location of the file pointed to by the URL
+	- Check if the method is authorized or not
+	- Check if the file to process is supported by our server
+	- Execute the CGI script by sending it the URL modified according to the path to root
+	- Send the result of the CGI to the socket with send() so that it is displayed
+	- Process the redirects with do_redir()
+	- Delete what the server knows about the client and close its socket since it will no longer be needed
 -------------------------------------------------------------------------------- */
 void Host::handle_request()
 {
@@ -113,20 +119,21 @@ void Host::handle_request()
 				this->kill_client(this->_clients[i]);
 				i--;
 			}
-			else if (is_request_done((char *)this->_clients[i].finalRequest.c_str(), header_size, this->_clients[i].requestSize))
+			else if (is_request_done((char*)this->_clients[i].finalRequest.c_str(), header_size, this->_clients[i].requestSize))
 			{
 				std::cout << colors::bright_cyan << "== New request! ==" << colors::reset << std::endl;
-				Request rqst((char*)this->_clients[i].finalRequest.c_str());
-				int ret = -1;
-				if ((ret = rqst.check_method()) != -1)
+
+				Request	rqst(this->_clients[i].finalRequest.c_str());
+				int		ret = -1;
+				if ((ret = rqst.check_method_and_protocol()) != -1)
 				{
 					this->show_error_page(ret, this->_clients[i]);
 					if (this->kill_client(this->_clients[i]))
 						i--;
 					continue;
 				}
-				std::string urlrcv = rqst.get_url();
-				size_t pos;
+				std::string	urlrcv = rqst.get_url();
+				size_t		pos;
 				if ((pos = urlrcv.rfind("?")) != std::string::npos)
 				{
 					this->query = urlrcv.substr(pos, urlrcv.size());
@@ -197,9 +204,12 @@ void Host::handle_request()
 }
 
 /* --------------------------------------------------------------------------------
-Exécuter la méthode GET
-Aller récupérer la page HTML demandée par le client et l'envoyer sur le socket pour l'afficher si elle a été trouvée, sinon afficher la page d'erreur correspondant à l'erreur rencontrée
-Si l'URL pointe vers un dossier et que dir_listing est activé, afficher l'index des fichiers du dossier
+Execute the GET method
+Retrieve the HTML page requested by the client and send it to the socket to dis-
+play it if it was found, otherwise display the error page corresponding to the
+error encountered
+If the URL points to a folder and dir_listing is activated, display the index of
+the files in the folder
 -------------------------------------------------------------------------------- */
 void Host::GET_method(Client& client, std::string urlrcv)
 {
@@ -250,15 +260,14 @@ void Host::GET_method(Client& client, std::string urlrcv)
 }
 
 /* --------------------------------------------------------------------------------
-Exécuter la méthode DELETE
+Execute the DELETE method
 
-Supprimer la ressource désignée par l'URL
+Delete the resource indicated by the URL
 -------------------------------------------------------------------------------- */
 void Host::DELETE_method(Client& client, std::string urlrcv)
 {
 	std::cout << colors::bright_yellow << "DELETE method!" << colors::reset << std::endl;
 	std::string urlsend = this->get_root_path(urlrcv, client.get_n_server());
-
 
 	FILE* fd = fopen(urlsend.c_str(), "r");
 	if (!fd)
@@ -279,28 +288,30 @@ void Host::DELETE_method(Client& client, std::string urlrcv)
 }
 
 /* --------------------------------------------------------------------------------
-Exécuter la méthode POST
-
-Besoin de plus d'explications
+Execute the POST method
+Determine whether we need to POST to a file or to a folder, then prepare the
+right parameters to send them to the write_with_poll() function
+The lstat() function allows to get information about the path passed in parame-
+ter, then S_ISDIR() tells if it is a folder or not
 -------------------------------------------------------------------------------- */
 void Host::POST_method(Client client, std::string url, Request req)
 {
 	if (req.get_header()["Transfer-Encoding"] == "chunked")
 	{
-		this->show_error_page(411, client);										// 411 Length required
+		this->show_error_page(411, client);
 		return;
 	}
-	std::string urlsend = this->get_root_path(url, client.get_n_server());	
-	struct stat buf;
-	lstat(urlsend.c_str(), &buf);												// Get file attributes about urlsend and put them in buf. If urlsend is a symbolic link, do not follow it.
+	std::string	urlsend = this->get_root_path(url, client.get_n_server());
+	struct stat	buf;
+	lstat(urlsend.c_str(), &buf);
 
-	if (S_ISDIR(buf.st_mode))													// POST dans un dossier (à comprendre)
+	if (S_ISDIR(buf.st_mode))
 	{
-		std::string name;
-		size_t start = 0;
-		size_t end = 0;
-		std::string body = req.get_full_body();
-		std::string file;
+		std::string	name;
+		size_t		start = 0;
+		size_t		end = 0;
+		std::string	body = req.get_full_body();
+		std::string	file;
 		if (!(req.get_header()["Content-Type"].empty()) && !(req.get_boundary().empty()))
 		{
 			std::cout << colors::on_cyan << "Post in directory: " << colors::reset << std::endl;
@@ -335,24 +346,25 @@ void Host::POST_method(Client client, std::string url, Request req)
 			return;
 		}
 	}
-	else																		// POST dans un fichier
+	else
 	{
 		std::cout << colors::on_cyan << "Post in file" << colors::reset << std::endl;
 		if (!this->write_with_poll(urlsend, client, req))
 			return;
 	}
 	if (req.get_len() == 0)
-		this->show_page(client, "", 204);										// No content to create
+		this->show_page(client, "", 204);
 	else
-		this->show_page(client, "", 201);										// Created
+		this->show_page(client, "", 201);
 }
 
 /* --------------------------------------------------------------------------------
-Inclure les serveurs configurés et l'environnement dans la classe Host
-Initialiser le socket de base pour chacun des serveurs que l'on veut faire tourner dans le programme
-Insérer les codes d'erreur dans _errors
+Include the configured servers and the environment in the Host class
+Initialize the base socket for each server you want to run in the program
+Insert the error codes in _errors
 
-socket : socket de base, d'écoute, peut être instancié plusieurs fois si la configuration de webserv demande de configurer plusieurs serveurs
+socket: basic listening socket, can be instantiated several times if the webserv
+configuration requires to configure several servers
 -------------------------------------------------------------------------------- */
 void Host::init_host(char** env, Config* data)
 {
@@ -387,7 +399,8 @@ void Host::init_host(char** env, Config* data)
 }
 
 /* --------------------------------------------------------------------------------
-Envoyer sur le socket le message et la page d'erreur correspondant à l'int reçu en premier paramètre
+Send on the socket the message and the error page corresponding to the int re-
+ceived in first parameter
 -------------------------------------------------------------------------------- */
 void Host::show_error_page(int err, Client& client)
 {
@@ -422,18 +435,13 @@ void Host::show_error_page(int err, Client& client)
 			}
 			close(fd);
 			this->show_page(client, errpages[ft_to_string<int>(err)], err);
-			// std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + ft_to_string<int>(it->second.size()) + "\n\n" + it->second + "\n";
-			// int sendret = send(client.get_client_socket(), msg.c_str(), msg.size(), 0);
-			// if (sendret < 0)
-			// 	std::cout << "Client disconnected" << std::endl;
-			// else if (sendret == 0)
-			// 	std::cout << "0 byte passed to server" << std::endl;
 		}
 	}
 }
 
 /* --------------------------------------------------------------------------------
-Fermer le socket attribué au client passé en paramètre et puis l'effacer de la liste de clients enregistrés
+Close the socket assigned to the client passed in parameter and then delete it
+from the list of registered clients
 -------------------------------------------------------------------------------- */
 bool Host::kill_client(Client client)
 {
@@ -450,9 +458,9 @@ bool Host::kill_client(Client client)
 	exit(1);
 }
 
-
 /* --------------------------------------------------------------------------------
-Vérifier si la méthode reçue par le client fait partie des méthodes autorisées ou pas
+Check if the method received by the client is one of the authorized methods or
+not
 -------------------------------------------------------------------------------- */
 bool Host::is_allowed(std::vector<std::string> methodlist, std::string methodreq)
 {
@@ -463,7 +471,8 @@ bool Host::is_allowed(std::vector<std::string> methodlist, std::string methodreq
 }
 
 /* --------------------------------------------------------------------------------
-Renvoyer l'url à donner au script CGI ou où aller chercher la page html à afficher
+Return the URL to give to the CGI script, which will start from the root speci-
+fied in the configuration file
 -------------------------------------------------------------------------------- */
 std::string Host::get_root_path(std::string urlrcv, int i)
 {
@@ -478,11 +487,11 @@ std::string Host::get_root_path(std::string urlrcv, int i)
 }
 
 /* --------------------------------------------------------------------------------
-Vérifier si le fichier à traiter est pris en charge par notre serveur (python ou perl)
+Check if the file to process is supported by our server (python or perl)
 -------------------------------------------------------------------------------- */
 bool Host::is_cgi(std::string filename)
 {
-	std::vector<std::string>  cgi_list;
+	std::vector<std::string> cgi_list;
 	cgi_list.push_back(".py");
 	cgi_list.push_back(".pl");
 	if (filename.find('.') == std::string::npos)
@@ -497,10 +506,15 @@ bool Host::is_cgi(std::string filename)
 }
 
 /* --------------------------------------------------------------------------------
-Envoyer sur le socket la page à afficher, gérer d'abord le cas où on ne reçoit pas l'URL de la page ( c'est à dire ? )
+Send the page to be displayed on the socket
 
+Operation in several steps : send first the header and then the body of the HTTP
+response message
 
-(Peut-être besoin de plus d'explications)
+First we have to find the type and size of the file to send all the necessary
+information in the header
+Then once the header is sent, we send the body separately with a loop similar to
+get_next_line() which reads and sends line by line the content of the file
 -------------------------------------------------------------------------------- */
 void Host::show_page(Client client, std::string dir, int code)
 {
@@ -515,27 +529,22 @@ void Host::show_page(Client client, std::string dir, int code)
 		if ((r = send(client.get_client_socket(), errMsg.c_str(), errMsg.size(), 0)) < 0)
 			this->show_error_page(500, client);
 		else if (r == 0)
-			this->show_error_page(400, client);									// Bad request
+			this->show_error_page(400, client);
 		return;
 	}
 	else
 	{
-		FILE* fd_s = fopen(dir.c_str(), "rb");									// Ouvrir le fichier passé en paramètre
-		fseek(fd_s, 0, SEEK_END);												// Positionner le curseur à la fin du fichier
-		int lSize = ftell (fd_s);												// Enregistrer le nombre de caractères que fait le fichier
-		rewind(fd_s);															// Revenir au début du fichier (pourquoi, si on le ferme juste après ?)
-		fclose(fd_s);
+		int			size = find_size(dir);
+		std::string	type = find_type(dir);
 
-		std::string type = find_type(dir);
-
-		std::string msg = "HTTP/1.1 " + this->_errors.find(code)->second + "\n" + "Content-Type: " + type + "\nContent-Length: " + ft_to_string<int>(lSize) + "\n\n"; // Concaténer toutes les infos du header de réponse HTTP dans une string
-		int ret = send(client.get_client_socket(), msg.c_str(), msg.size(), 0);	// Envoyer la string générée sur le socket
+		std::string hdr = "HTTP/1.1 " + this->_errors.find(code)->second + "\n" + "Content-Type: " + type + "\nContent-Length: " + ft_to_string<int>(size) + "\n\n";
+		int ret = send(client.get_client_socket(), hdr.c_str(), hdr.size(), 0);
 		if (ret < 0)
 			this->show_error_page(500, client);
 		else if (ret == 0)
 			this->show_error_page(400, client);
 
-		int fd_r = open(dir.c_str(), O_RDONLY);									// ... Je comprends plus grand chose à partir d'ici jusqu'à la fin du fichier
+		int fd_r = open(dir.c_str(), O_RDONLY);
 		if (fd_r < 0)
 		{
 			this->show_error_page(500, client);
@@ -545,21 +554,21 @@ void Host::show_page(Client client, std::string dir, int code)
 		this->add_to_wait(fd_r, &this->readSet);
 		this->select_fd(&this->readSet, &this->writeSet);
 
-		char file[1024];
-		int r2;
-		int r = read(fd_r, file, 1024);
-		if (r < 0)
+		char bdy[1024];
+		int rd2;
+		int rd = read(fd_r, bdy, 1024);
+		if (rd < 0)
 			this->show_error_page(500, client);
-		else // Get big file
+		else
 		{
-			while (r)
+			while (rd)
 			{
-				if ((r2 = send(client.get_client_socket(), file, r, 0)) < 0)
+				if ((rd2 = send(client.get_client_socket(), bdy, rd, 0)) < 0)
 				{
 					this->show_error_page(500, client);
 					break;
 				}
-				else if (r2 == 0)
+				else if (rd2 == 0)
 				{
 					this->show_error_page(400, client);
 					break;
@@ -568,12 +577,12 @@ void Host::show_page(Client client, std::string dir, int code)
 				this->add_to_wait(fd_r, &this->readSet);
 				this->select_fd(&this->readSet, &this->writeSet);
 
-				if ((r = read(fd_r, file, 1024)) < 0)
+				if ((rd = read(fd_r, bdy, 1024)) < 0)
 				{
 					this->show_error_page(500, client);
 					break;
 				}
-				if (r == 0)
+				if (rd == 0)
 					break;
 			}
 		}
@@ -582,11 +591,8 @@ void Host::show_page(Client client, std::string dir, int code)
 }
 
 /* --------------------------------------------------------------------------------
-Si l'url reçu pointe vers un dossier, et que le listing est activé, afficher la page de listing des fichiers
-
-Pas ouf comme façon de faire parce que la page à afficher est littéralement codée en html ici et ne permet aucune modification de style
-
-Les liens n'apparaissent pas dans le bon ordre mais je ne sais pas si c'est à cause de readdir qui le fait mal, ou s'il y a une erreur dans le code
+If the URL received points to a folder, and the listing is enabled, generate a
+directory listing page and display it directly
 -------------------------------------------------------------------------------- */
 void Host::directory_listing(int socket, std::string path, std::string fullurl, Client client)
 {
@@ -603,11 +609,11 @@ void Host::directory_listing(int socket, std::string path, std::string fullurl, 
 <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css\" rel=\"stylesheet\"\
 	integrity=\"sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor\" crossorigin=\"anonymous\">\n\
 <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300,400,700\" rel=\"stylesheet\">\n\
-<style>\nbody {\ntext-align: center rigth;\nbackground-color: #dbd6ec;\nbackground-image: url('img/land.jpg');\n\
+<style>\nbody {\ntext-align: center rigth;\nbackground-color: #b0c6db;\nbackground-image: url('img/land.jpg');\n\
 background-repeat: no-repeat;\nbackground-size: cover;\nbackground-position: center center;\nfont-family: 'Open Sans', \
 sans-serif;\nfont-weight: 300;\nmargin-left: 50px;\n}\n</style>\n</head>\n\
-<body>\n<br><h2>Index of " + path +  "</h2><br>\n<pre>\n";
-	
+<body>\n<br><h2>Index of " + path + "</h2><br>\n<pre>\n";
+
 	if ((dir = opendir(fullurl.c_str())) != NULL)
 	{
 		while ((entry = readdir(dir)) != NULL)
@@ -625,15 +631,18 @@ sans-serif;\nfont-weight: 300;\nmargin-left: 50px;\n}\n</style>\n</head>\n\
 	if (r < 0)
 		this->show_error_page(500, client);
 	else if (r == 0)
-		this->show_error_page(400, client);										// Bad request
+		this->show_error_page(400, client);
 }
 
 /* --------------------------------------------------------------------------------
-Écrire dans l'url passé en paramètre le contenu de la requête POST
-Le fd du socket sur lequel on veut écrire est d'abord mis en file d'attente pour s'assurer qu'il n'y ait aucun chevauchement
+Write in the URL passed in parameter the content of the POST request, using
+write() and the fd of the file to write in
+The fd of the socket to write to is first queued to make sure there is no over-
+lap
 
-Cette fonction possède une surcharge dans laquelle on passe toute la classe Request pour aller y chercher la string voulue
-Cette surcharge-ci est appelée dans le cas où on POST dans un dossier
+This function has an overload in which the whole Request class is passed to
+fetch the desired string
+This overload is called in the case of POSTing to a directory
 -------------------------------------------------------------------------------- */
 bool Host::write_with_poll(std::string url, Client client, std::string str)
 {
@@ -652,7 +661,7 @@ bool Host::write_with_poll(std::string url, Client client, std::string str)
 	r = write(fd, str.c_str(), str.size());
 	if (r < 0)
 	{
-		this->show_error_page(500, client);										// Internal server error
+		this->show_error_page(500, client);
 		close(fd);
 		return false;
 	}
@@ -661,11 +670,14 @@ bool Host::write_with_poll(std::string url, Client client, std::string str)
 }
 
 /* --------------------------------------------------------------------------------
-Écrire dans l'url passé en paramètre le contenu de la requête POST
-Le fd du socket sur lequel on veut écrire est d'abord mis en file d'attente pour s'assurer qu'il n'y ait aucun chevauchement
+Write in the URL passed in parameter the content of the POST request, using
+write() and the fd of the file to write in
+The fd of the socket to write to is first queued to make sure there is no over-
+lap
 
-Cette fonction possède une surcharge dans laquelle on ne passe que la string nécessaire et non pas toute la classe Request
-Cette surcharge-ci est appelée dans le cas où on POST dans un fichier
+This function has an overload in which only the necessary string is passed and
+not the whole Request class
+This overload is called in the case of POSTing to a file
 -------------------------------------------------------------------------------- */
 bool Host::write_with_poll(std::string url, Client client, Request req)
 {
@@ -694,8 +706,9 @@ bool Host::write_with_poll(std::string url, Client client, Request req)
 }
 
 /* --------------------------------------------------------------------------------
-Obtenir l'emplacement du fichier pointé par l'url
-Passe par le vecteur "_locations" de la classe Server pour y chercher le fichier demandé
+Get the location of the file pointed by the URL
+Go through the "_locations" vector of the Server class to look for the requested
+file
 -------------------------------------------------------------------------------- */
 Location* Host::get_location(std::string url, int i)
 {
@@ -712,9 +725,10 @@ Location* Host::get_location(std::string url, int i)
 }
 
 /* --------------------------------------------------------------------------------
-En cas de redirection (lien qui pointe vers un autre site)
+In case of redirection (link that goes to another site)
 
-Envoie un message de réponse HTML pour rediriger le client vers le site désiré
+Generate and send an HTML response message to redirect the client to the desired
+site
 -------------------------------------------------------------------------------- */
 void Host::do_redir(Client client, std::string url)
 {
@@ -728,19 +742,36 @@ void Host::do_redir(Client client, std::string url)
 		this->show_error_page(400, client);
 }
 
+
 /* --- NON-MEMBER FUNCTIONS --- */
 
 /* --------------------------------------------------------------------------------
-Trouver l'extension du fichier reçu en paramètre pour inclure le bon type de contenu dans le message de réponse http
+Find the size of the file received in parameter to include it in the HTTP re-
+sponse message
+-------------------------------------------------------------------------------- */
+int			find_size(std::string dir)
+{
+	FILE* fd_s = fopen(dir.c_str(), "rb");									
+	fseek(fd_s, 0, SEEK_END);												
+	int lSize = ftell(fd_s);												
+	rewind(fd_s);															
+	fclose(fd_s);
 
-Sûrement une meilleure façon de faire avec std::string que de repasser par un char* pour utiliser strcmp -_-
+	return lSize;
+}
 
-Pas vraiment de fonction C++ qui permet de trouver la dernière occurence d'une std::string
-find_last_of() le fait avec un caractère mais ne retourne que sa position sous forme de size_t
+/* --------------------------------------------------------------------------------
+Find the extension of the file received as a parameter to include the right con-
+tent type in the http response message
+
+Not really a C++ function that finds the last occurrence of a std::string better
+than this
+find_last_of() does it with a single character but only returns its position as
+a size_t
 -------------------------------------------------------------------------------- */
 std::string find_type(std::string dir)
 {
-	char *dot = strrchr((char *)dir.c_str(), '.');
+	char*	dot = strrchr((char*)dir.c_str(), '.');
 	if (strcmp(dot, ".css") == 0) return "text/css";
 	if (strcmp(dot, ".jpeg") == 0) return "image/jpeg";
 	if (strcmp(dot, ".jpg") == 0) return "image/jpg";
@@ -756,18 +787,21 @@ std::string find_type(std::string dir)
 }
 
 /* --------------------------------------------------------------------------------
-Fonction de la libft qui reproduit le comportement de la fonction strnstr, qui n'est pas disponible sur toutes les plateformes
+libft function that reproduces the behavior of the strnstr function, which is
+not available on all platforms
 
-Elle recherche la chaîne de caractères "needle" dans la chaîne de caractères "haystack" jusqu'au carctère en position "n", et retourne un pointeur vers le premier caractère de la chaîne trouvée, ou NULL le cas échéant
+It searches for the string "needle" in the string "haystack" up to the character
+in position "n", and returns a pointer to the first character of the string
+found, or NULL if not found
 -------------------------------------------------------------------------------- */
-char*	ft_strnstr(const char *haystack, const char *needle, size_t n)
+char*	ft_strnstr(const char* haystack, const char* needle, size_t n)
 {
-	size_t	in;																	// Index de needle
-	size_t	ih;																	// Index de haystack
-	char	*hs;																// Copie de haystack
+	size_t	in;
+	size_t	ih;
+	char*	hs;
 
 	ih = 0;
-	hs = (char *)haystack;
+	hs = (char*)haystack;
 	if (!strlen(needle))
 		return (hs);
 	if ((strlen(haystack) < strlen(needle)) || n < strlen(needle))
@@ -785,14 +819,15 @@ char*	ft_strnstr(const char *haystack, const char *needle, size_t n)
 }
 
 /* --------------------------------------------------------------------------------
-Fonction en C qui détermine si la requête a bien terminé d'être envoyée par le
-client/reçue par le serveur
+C function that determines if the request has finished being sent by the client/
+received by the server, taking into account if the request is chunked or not, or
+if a boundary has been defined or not
 -------------------------------------------------------------------------------- */
-bool is_request_done(char *request, size_t header_size, size_t sizereq)
+bool is_request_done(const char* request, size_t header_size, size_t sizereq)
 {
-	size_t sizebody = sizereq - header_size;
+	size_t	sizebody = sizereq - header_size;
 
-	char *body = strstr(request, "\r\n\r\n");
+	char*	body = strstr((char*)request, "\r\n\r\n");
 	if (!body)
 		return false;
 	body += 4;
@@ -804,10 +839,11 @@ bool is_request_done(char *request, size_t header_size, size_t sizereq)
 	}
 	else if (ft_strnstr(request, "Content-Length", sizereq - sizebody))
 	{
-		char *start = ft_strnstr(request, "Content-Length: ", sizereq - sizebody) + 16;
-		char *end = strstr(start, "\r\n");
-		char *len = strndup(start, end - start);
-		int len_i = atoi(len);
+		char*	start = ft_strnstr(request, "Content-Length: ", sizereq - sizebody) + 16;
+		char*	end = strstr(start, "\r\n");
+		char*	len = strndup(start, end - start);
+		int		len_i = atoi(len);
+
 		free(len);
 		if ((size_t)len_i <= sizebody)
 			return true;
@@ -823,7 +859,7 @@ bool is_request_done(char *request, size_t header_size, size_t sizereq)
 }
 
 /* --------------------------------------------------------------------------------
-Converts a numeric value to std::string.
+Converts a numeric value to std::string
 -------------------------------------------------------------------------------- */
 template<typename T>
 std::string ft_to_string(const T& x)

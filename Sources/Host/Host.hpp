@@ -3,8 +3,9 @@
 
 # include "../webserv.hpp"
 
-// Variable globale dans laquelle tout va tourner
-// Peut être renommée Host, Global, Main
+/* --------------------------------------------------------------------------------
+Global variable in which everything will run
+-------------------------------------------------------------------------------- */
 class Host
 {
 	public:
@@ -15,9 +16,9 @@ class Host
 		std::vector<Socket> get_socket_list() {return this->_sockets;}
 		std::vector<Client> get_client_list() {return this->_clients;}
 
-		std::vector<Server*> servers;
+		std::vector<Server*>	servers;
 
-		char **envp;
+		char**	envp;
 
 		int		maxFd;
 		fd_set	readSet;
@@ -49,8 +50,9 @@ class Host
 		std::map<int, std::string>	_errors;
 };
 
-bool		is_request_done(char *request, size_t header_size, size_t sizereq);
-char*		ft_strnstr(const char *haystack, const char *needle, size_t n);
+bool		is_request_done(const char* request, size_t header_size, size_t sizereq);
+char*		ft_strnstr(const char* haystack, const char* needle, size_t n);
+int			find_size(std::string dir);
 std::string find_type(std::string dir);
 
 template<typename T>

@@ -3,8 +3,10 @@
 
 # include "../webserv.hpp"
 
-// Classe qui contient toutes les informations relatives à un seul "sous-serveur", elle peut donc être instanciée plusieurs fois si le fichier de configuration demande plusieurs serveurs
-// Peut être renommée Server
+/* --------------------------------------------------------------------------------
+Class that contains all the information related to a single server, so it can be
+instantiated several times if the configuration file requires several servers
+-------------------------------------------------------------------------------- */
 class Server
 {
 	public:
@@ -18,7 +20,7 @@ class Server
 		void set_error(std::string error, std::string page)	{this->_error.insert(std::pair<std::string, std::string>(error, page));}
 		void set_index(std::string word)					{this->_index = word;}
 		void set_body_size(std::string word)				{this->_bodySize = word;}
-		void set_location()									{this->_locations.push_back(new Location());} // Ajouter une nouvelle instance de la classe Location dans le vecteur "_locations"
+		void set_location()									{this->_locations.push_back(new Location());}
 		void set_listing(std::string word)					{this->_listing = word;}
 
 		std::string							get_listen()	{return this->_listen;}
