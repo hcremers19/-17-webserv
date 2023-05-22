@@ -170,7 +170,7 @@ void Host::handle_request()
 					std::string urlsend = this->get_root_path(urlrcv, this->_clients[i].get_n_server());
 					std::string rescgi = exec_CGI(urlsend, this->envp, rqst, this->servers[this->_clients[i].get_n_server()]);
 					if (rescgi.empty())
-						this->show_error_page(404, this->_clients[i]);
+						this->show_error_page(500, this->_clients[i]);
 
 					rescgi = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n" + rescgi;
 					int r = send(this->_clients[i].get_client_socket(), rescgi.c_str(), rescgi.size(), 0);
