@@ -54,8 +54,8 @@ Calls the parsing of the configuration file, initializes the host, retrieves the
 signals and launches the main loop where the interactions with the server are
 processed
 
-data : Configuration structure in which a lot of data are stored temporarily,
-before being exported to the global variable
+data: Configuration structure in which a lot of data are stored temporarily, be-
+fore being exported to the global variable
 -------------------------------------------------------------------------------- */
 int main(int ac, char** av, char** envp)
 {

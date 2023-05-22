@@ -37,9 +37,9 @@ SRCS		=	Sources/CGI/CGI.cpp	\
 
 #-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
 
-all : ${NAME}
+all: ${NAME}
 
-${NAME} :
+${NAME}:
 #	@${PRI} "\n${C_ORANGE}... compiling ...\n${C_DEFAUT}"
 	@${PRI} "${C_ORANGE}... compiling ...\n\n${C_DEFAUT}"
 	@${CC} ${FLAGS} -I ${INCLUDES} ${SRCS} -o ${NAME}

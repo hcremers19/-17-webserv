@@ -153,9 +153,9 @@ void Host::handle_request()
 
 				this->loc = this->get_location(urlrcv, this->_clients[i].get_n_server());
 
-				if (!((this->loc == NULL) ? this->is_allowed(this->servers[this->_clients[i].get_n_server()]->get_method(),
-					rqst.get_method()) : this->is_allowed(this->loc->get_method(), rqst.get_method()))
-						&& urlrcv.find("cgi_bin") == std::string::npos)
+				if (!((this->loc == NULL) ?
+					this->is_allowed(this->servers[this->_clients[i].get_n_server()]->get_method(), rqst.get_method()) :
+					this->is_allowed(this->loc->get_method(), rqst.get_method())) && urlrcv.find("cgi_bin") == std::string::npos)
 				{
 					std::cout << "Unautorised method " << rqst.get_method() << "!" << std::endl;
 					show_error_page(405, this->_clients[i]);
@@ -169,6 +169,8 @@ void Host::handle_request()
 
 					std::string urlsend = this->get_root_path(urlrcv, this->_clients[i].get_n_server());
 					std::string rescgi = exec_CGI(urlsend, this->envp, rqst, this->servers[this->_clients[i].get_n_server()]);
+
+					std::cout << colors::bright_magenta << "rescgi: " << colors::reset << rescgi << std::endl;
 					if (rescgi.empty())
 						this->show_error_page(500, this->_clients[i]);
 
@@ -296,6 +298,7 @@ ter, then S_ISDIR() tells if it is a folder or not
 -------------------------------------------------------------------------------- */
 void Host::POST_method(Client client, std::string url, Request req)
 {
+	std::cout << colors::bright_yellow << "POST method!" << colors::reset << std::endl;
 	if (req.get_header()["Transfer-Encoding"] == "chunked")
 	{
 		this->show_error_page(411, client);
@@ -487,13 +490,14 @@ std::string Host::get_root_path(std::string urlrcv, int i)
 }
 
 /* --------------------------------------------------------------------------------
-Check if the file to process is supported by our server (python or perl)
+Check if the file to process is supported by our server (Python, Perl or PHP)
 -------------------------------------------------------------------------------- */
 bool Host::is_cgi(std::string filename)
 {
 	std::vector<std::string> cgi_list;
 	cgi_list.push_back(".py");
 	cgi_list.push_back(".pl");
+	cgi_list.push_back(".php");
 	if (filename.find('.') == std::string::npos)
 		return false;
 	std::string extension = filename.substr(filename.find('.'), filename.size());
@@ -508,7 +512,7 @@ bool Host::is_cgi(std::string filename)
 /* --------------------------------------------------------------------------------
 Send the page to be displayed on the socket
 
-Operation in several steps : send first the header and then the body of the HTTP
+Operation in several steps: send first the header and then the body of the HTTP
 response message
 
 First we have to find the type and size of the file to send all the necessary
