@@ -391,12 +391,10 @@ void Host::init_host(char** env, Config* data)
 	this->_errors.insert(std::make_pair(400, "400 Bad Request"));
 	this->_errors.insert(std::make_pair(404, "404 Not Found"));
 	this->_errors.insert(std::make_pair(405, "405 Method Not Allowed"));
-	this->_errors.insert(std::make_pair(408, "408 Request Timeout"));
 	this->_errors.insert(std::make_pair(411, "411 Length Required"));
 	this->_errors.insert(std::make_pair(413, "413 Request Entity Too Large"));
 	this->_errors.insert(std::make_pair(414, "414 Request-URI Too Long"));
 	this->_errors.insert(std::make_pair(500, "500 Internal Server Error"));
-	this->_errors.insert(std::make_pair(502, "502 Bad Gateway"));
 	this->_errors.insert(std::make_pair(505, "505 HTTP Version Not Supported"));
 	this->maxFd = -1;
 }
