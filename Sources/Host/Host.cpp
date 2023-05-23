@@ -167,6 +167,7 @@ void Host::handle_request()
 				{
 					std::cout << colors::blue << "CGI start!" << colors::reset << std::endl;
 
+					std::cout << "handle_request URL = " << urlrcv << std::endl;
 					std::string urlsend = this->get_root_path(urlrcv, this->_clients[i].get_n_server());
 					std::string rescgi = exec_CGI(urlsend, this->envp, rqst, this->servers[this->_clients[i].get_n_server()]);
 
@@ -224,6 +225,7 @@ void Host::GET_method(Client& client, std::string urlrcv)
 	}
 	struct stat path_stat;
 
+	std::cout << "GET_method URL = " << urlrcv << std::endl;
 	std::string urlsend = this->get_root_path(urlrcv, client.get_n_server());
 
 	if (this->loc && !(this->loc->get_index().empty()) && (strcmp(urlrcv.c_str(), \
@@ -269,6 +271,7 @@ Delete the resource indicated by the URL
 void Host::DELETE_method(Client& client, std::string urlrcv)
 {
 	std::cout << colors::bright_yellow << "DELETE method!" << colors::reset << std::endl;
+	std::cout << "DELETE_method URL = " << urlrcv << std::endl;
 	std::string urlsend = this->get_root_path(urlrcv, client.get_n_server());
 
 	FILE* fd = fopen(urlsend.c_str(), "r");
@@ -304,6 +307,7 @@ void Host::POST_method(Client client, std::string url, Request req)
 		this->show_error_page(411, client);
 		return;
 	}
+	std::cout << "POST_method URL = " << url << std::endl;
 	std::string	urlsend = this->get_root_path(url, client.get_n_server());
 	struct stat	buf;
 	lstat(urlsend.c_str(), &buf);
@@ -491,6 +495,8 @@ std::string Host::get_root_path(std::string urlrcv, int i)
 		urlrcv.erase(urlrcv.find(this->loc->get_dir()), urlrcv.find(this->loc->get_dir()) + this->loc->get_dir().size());
 
 	std::cout << "Url To Send: " << colors::green << urlroot + urlrcv << colors::reset << std::endl;
+	std::cout << "urlroot: " << colors::green << urlroot << colors::reset << std::endl;
+	std::cout << "urlrcv: " << colors::green << urlrcv << colors::reset << std::endl;
 	return urlroot + urlrcv;
 }
 
@@ -726,7 +732,7 @@ Location* Host::get_location(std::string url, int i)
 	{
 		if (strncmp(locs[i]->get_dir().c_str(), url.c_str(), locs[i]->get_dir().size()) == 0)
 		{
-			std::cout << colors::on_cyan << url << " is the location!" << colors::reset << std::endl;
+			std::cout << colors::on_cyan << url << " is a location" << colors::reset << std::endl;
 			return locs[i];
 		}
 	}

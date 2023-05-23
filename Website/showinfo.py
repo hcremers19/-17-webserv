@@ -6,7 +6,9 @@ username = form.getvalue('username')
 password = form.getvalue('password')
 
 print """\
-<html><body>
+<html>
+<body>
 <h1>Welcome %s</h1>
-</body></html>
+</body>
+</html>
 """ % (username, )

@@ -17,7 +17,7 @@ std::string file_extention(std::string filePath)
 	if (!strcmp(&filePath[i], ".py"))
 		return "/usr/bin/python2.7";
 	else if (!strcmp(&filePath[i], ".pl"))
-		return "/usr/bin/perl5.28";
+		return "/usr/bin/perl";
 	else if (!strcmp(&filePath[i], ".php"))
 		return "/usr/bin/php";
 	else
@@ -98,8 +98,16 @@ char**	vector_to_tab(std::vector<std::string>& vec)
 		exit(1);
 	}
 
+	std::cout << colors::grey << colors::on_yellow << "--- ENV ---" << colors::reset << colors::yellow << std::endl;
+
 	for (std::vector<std::string>::iterator it = vec.begin(); it != vec.end(); it++)
+	{
 		tab[i++] = (char*)(*it).c_str();
+		std::cout << tab[i - 1] << std::endl;
+	}
+
+	std::cout << colors::reset;
+
 	tab[i] = 0;
 	return tab;
 }
@@ -123,93 +131,97 @@ std::string exec_CGI(std::string filePath, char** envp, Request& req, Server* se
 		return ("");
 	}
 
-	int		fdIn;
-	int		fd_in[2];
+	// int		fdIn = 0;
+	// int		fd_in[2];
 	int		fd_out[2];
 	char*	tab[3];
 	std::vector<std::string> env;
-	pid_t	pid = fork();
-	char	buff[2041] = {0};
+	pid_t	pid;
+	char	buff[BUFFER_SIZE + 1] = {0};
 	std::string	ret = "";
 	int		i;
-
-	tab[0] = (char*)execPath.c_str();
-	tab[1] = (char*)filePath.c_str();
-	tab[2] = 0;
 
 	new_env(envp, req, env, serv);
 	char** myEnv = vector_to_tab(env);
 
-	pipe(fd_in);
+	// pipe(fd_in);
 	pipe(fd_out);
 
+	pid = fork();
 	if (pid == -1)
 	{
 		perror("fork()");
 		exit(1);
 	}
-
-	if (pid == 0)
+	else if (pid == 0)
 	{
-		close(fd_in[1]);
+		// close(fd_in[1]);
 		close(fd_out[0]);
-		if (dup2(fd_in[0], 0) == -1)
+		// if (dup2(fd_in[0], STDIN_FILENO) == -1)
+		// {
+		// 	perror("dup2");
+		// 	exit(1);
+		// }
+		if (dup2(fd_out[1], STDOUT_FILENO) == -1)
 		{
 			perror("dup2");
 			exit(1);
 		}
-		if (dup2(fd_out[1], 1) == -1)
-		{
-			perror("dup2");
-			exit(1);
-		}
+		// close(fd_in[0]);
+		// close(fd_in[1]);
+		close(fd_out[0]);
+		close(fd_out[1]);
+
+		tab[0] = (char*)execPath.c_str();
+		tab[1] = (char*)filePath.c_str();
+		tab[2] = NULL;
+
 		execve(tab[0], tab, myEnv);
 		perror("execve");
 		exit(1);
 	}
 	else
 	{
-		fdIn = dup(0);
-		if (fdIn == -1)
-		{
-			perror("dup");
-			exit(1);
-		}
-		if (dup2(fd_in[0], 0) == -1)
-		{
-			perror("dup2");
-			exit(1);
-		}
-		if (!req.get_full_body().empty())
-			write(fd_in[1], req.get_full_body().c_str(), req.get_len());
-		close(fd_in[0]);
-		close(fd_in[1]);
-		waitpid(pid, 0, 0);
-		if (dup2(fdIn, 0) == -1)
-		{
-			perror("dup2");
-			exit(1);
-		}
-		free(myEnv);
+		// fdIn = dup(0);
+		// if (fdIn == -1)
+		// {
+		// 	perror("dup");
+		// 	exit(1);
+		// }
+		// if (dup2(fd_in[0], 0) == -1)
+		// {
+			// perror("dup2");
+			// exit(1);
+		// }
+		// if (!req.get_full_body().empty())
+			// write(fd_in[1], req.get_full_body().c_str(), req.get_len());
+		// close(fd_in[0]);
+		// close(fd_in[1]);
+		waitpid(pid, NULL, 0);
+		// if (dup2(fd_in[0], STDIN_FILENO) == -1)
+		// {
+		// 	perror("dup2");
+		// 	exit(1);
+		// }
 		close(fd_out[1]);
-		i = read(fd_out[0], buff, 2040);
+		free(myEnv);
+		i = read(fd_out[0], buff, BUFFER_SIZE);
 		if (i == -1)
 		{
 			perror("read");
 			exit(1);
 		}
-		buff[i] = 0;
+		buff[i] = '\0';
 		ret += std::string(buff);
 		while (i > 0)
 		{
-			i = read(fd_out[0], buff, 2040);
+			i = read(fd_out[0], buff, BUFFER_SIZE);
 			if (i == -1)
 			{
 				perror("read");
 				exit(1);
-
 			}
-			buff[i] = 0;
+			buff[i] = '\0';
 			ret += std::string(buff);
 		}
 		close(fd_out[0]);

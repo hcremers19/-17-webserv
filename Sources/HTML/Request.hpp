@@ -26,8 +26,8 @@ class Request
 		int		check_method_and_protocol();
 
 	protected:
-		void	make_POST(std::stringstream& ss);
-		void	make_GET(std::stringstream& ss);
+		void	parse_POST(std::stringstream& ss);
+		void	parse_GET(std::stringstream& ss);
 		void	make_query();
 
 		std::map<std::string, std::string>	_header;		// Full header as a map

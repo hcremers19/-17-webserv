@@ -3,6 +3,8 @@
 
 # include "../webserv.hpp"
 
+#define BUFFER_SIZE 65536 // Previously 2040
+
 std::string	file_extention(std::string filePath);
 std::string	search_exec(std::string filePath);
 std::string	ft_st_to_string(size_t x);
