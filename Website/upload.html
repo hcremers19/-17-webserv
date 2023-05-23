@@ -19,6 +19,7 @@
 			background-position: center center;
 			font-family: 'Open Sans', sans-serif;
 			font-weight: 300;
+			margin-left: 150px;
 		}
 
 		footer {
@@ -44,20 +45,17 @@
 	<br>
 	<div class="center">
 		<form action="cgi_bin/upload.py" method="post" enctype="multipart/form-data">
-			<input id="files" type="file" style="visibility:hidden;" name="input_file" class="btn btn-light">
-			<label for="files" class="btn btn-light">Select file</label>
+			<input id="files" type="file" name="input_file" class="btn btn-light">
 			<button type="submit" class="btn btn-outline-light">Upload with Python</button>
 		</form>
 		<br>
 		<form action="cgi_bin/upload.pl" method="post" enctype="multipart/form-data">
-			<input id="files" type="file" style="visibility:hidden;" name="input_file" class="btn btn-light">
-			<label for="files" class="btn btn-light">Select file</label>
+			<input id="files" type="file" name="input_file" class="btn btn-light">
 			<button type="submit" class="btn btn-outline-light">Upload with Perl</button>
 		</form>
 		<br>
 		<form action="cgi_bin/upload.php" method="post" enctype="multipart/form-data">
-			<input type="file" style="visibility:hidden;" name="fileToUpload" id="fileToUpload" class="btn btn-light">
-			<label for="fileToUpload" class="btn btn-light">Select file</label>
+			<input type="file" name="fileToUpload" id="fileToUpload" class="btn btn-light">
 			<button type="submit" class="btn btn-outline-light">Upload with PHP</button>
 		</form>
 	</div>
