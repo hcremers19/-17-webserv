@@ -15,11 +15,11 @@ std::string file_extention(std::string filePath)
 	std::cout << colors::bright_magenta << "file_extension: " << colors::reset << &filePath[i] << std::endl;
 	// return ((!strcmp(&filePath[i], ".py")) ? "/usr/bin/python3" : ((!strcmp(&filePath[i], ".pl")) ? "/usr/bin/perl" : ""));
 	if (!strcmp(&filePath[i], ".py"))
-		return "/usr/bin/python3.8";
+		return "/usr/bin/python2.7";
 	else if (!strcmp(&filePath[i], ".pl"))
-		return "/usr/bin/perl";
+		return "/usr/bin/perl5.28";
 	else if (!strcmp(&filePath[i], ".php"))
-		return "/usr/bin/php7.4";
+		return "/usr/bin/php";
 	else
 		return "";
 }
@@ -31,8 +31,6 @@ Return the path to the executable if it works, otherwise an empty string
 std::string search_exec(std::string filePath)
 {
 	const std::string exec = file_extention(filePath);
-
-	std::cout << colors::bright_magenta << "exec: " << colors::reset << exec << std::endl;
 
 	if (exec == "")
 	{
@@ -117,6 +115,8 @@ std::string exec_CGI(std::string filePath, char** envp, Request& req, Server* se
 {
 	std::cout << colors::bright_magenta << "filePath: " << colors::reset << filePath << std::endl;
 	std::string execPath = search_exec(filePath);
+
+	std::cout << colors::bright_magenta << "execPath: " << colors::reset << execPath << std::endl;
 	if (execPath == "")
 	{
 		std::cerr << "Bad file" << std::endl;
