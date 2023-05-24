@@ -17,7 +17,7 @@ std::string file_extention(std::string filePath)
 
     while (filePath[i]) i++;
     while(i && filePath[i] != '.') i--;
-	
+
 	std::cout << colors::bright_magenta << "file_extension: " << colors::reset << &filePath[i] << std::endl;
 	// return ((!strcmp(&filePath[i], ".py")) ? "/usr/bin/python3" : ((!strcmp(&filePath[i], ".pl")) ? "/usr/bin/perl" : ""));
 	if (!strcmp(&filePath[i], ".py"))
@@ -47,6 +47,17 @@ std::string search_exec(std::string filePath)
 }
 
 /* --------------------------------------------------------------------------------
+Converts a size_t numeric value to std::string.
+-------------------------------------------------------------------------------- */
+std::string ft_std_to_string(size_t x)
+{
+	std::ostringstream oss;
+
+	oss << x;
+	return (oss.str());
+}
+
+/* --------------------------------------------------------------------------------
 Create a new environment in vector form, which includes all the values of the
 environment in which webserv is running + custom values related to the request
 currently being processed
@@ -66,7 +77,7 @@ void new_env(char** envp, Request& req, std::vector<std::string>& my_env, Server
 	if (!req.get_method().empty())
 		my_env.push_back("REQUEST_METHOD=" + req.get_method());
 	if (req.get_len())
-		my_env.push_back("CONTENT_LENGTH=" + std::to_string(req.get_len()));	// c++11
+		my_env.push_back("CONTENT_LENGTH=" + ft_std_to_string(req.get_len()));
 	if (!req.get_protocol().empty())
 		my_env.push_back("SERVER_SOFTWARE=" + req.get_protocol());
 
@@ -118,14 +129,14 @@ std::string exec_CGI(std::string filePath, char** envp, Request& req, Server* se
 		fd_in[2],
 		fd_out[2],
 		i;
-	char buff[2041] = {0};														// /!\ Comprendre pourquoi 2040
+	char buff[2041] = {0};
 	char* tab[3];
 	char** myEnv;
 	std::vector<std::string> env;
 	std::string ret = "";
 
-	tab[0] = (char *)execPath.c_str();											// Chemin vers l'exécutable qui sera nécessaire
-	tab[1] = (char *)filePath.c_str();											// Chemin vers le fichier à exécuter --> Utiles pour execve
+	tab[0] = (char *)execPath.c_str();
+	tab[1] = (char *)filePath.c_str();
 	tab[2] = 0;
 	new_env(envp, req, env, serv);
 	myEnv = vector_to_tab(env);
@@ -152,7 +163,7 @@ std::string exec_CGI(std::string filePath, char** envp, Request& req, Server* se
 		if (dup2(fd_in[0], 0) == -1)
 			pexit("dup2", 1);
 		if (!req.get_full_body().empty())
-			write(fd_in[1], req.get_full_body().c_str(), req.get_len()); // req.getBody ou req.getBodyComplet
+			write(fd_in[1], req.get_full_body().c_str(), req.get_len());
 		close(fd_in[0]);
 		close(fd_in[1]);
 		waitpid(pid, 0, 0);
@@ -171,11 +182,10 @@ std::string exec_CGI(std::string filePath, char** envp, Request& req, Server* se
 			if (i == -1)
 				pexit("read", 1);
 			buff[i] = 0;
-			ret += std::string(buff);											// Lire une à une toutes les lignes du résultat du script CGI
+			ret += std::string(buff);
 		}
 		close(fd_out[0]);
-		std::cout << "ret = " << ret << std::endl;
-		return ret;																// Retourner le résultat final du script en une seule string comprenant toutes les lignes
+		return ret;
 	}
 	return "";
 }

@@ -123,7 +123,7 @@ void Host::handle_request()
 			{
 				std::cout << colors::bright_cyan << "== New request! ==" << colors::reset << std::endl;
 
-				std::cout << colors::cyan << "Final request:" << this->_clients[i].finalRequest << colors::reset << std::endl;
+				// std::cout << colors::cyan << "Final request:" << this->_clients[i].finalRequest << colors::reset << std::endl;
 				Request	rqst(this->_clients[i].finalRequest.c_str());
 				int		ret = -1;
 				if ((ret = rqst.check_method_and_protocol()) != -1)
@@ -158,7 +158,7 @@ void Host::handle_request()
 					this->is_allowed(this->servers[this->_clients[i].get_n_server()]->get_method(), rqst.get_method()) :
 					this->is_allowed(this->loc->get_method(), rqst.get_method())) && urlrcv.find("cgi_bin") == std::string::npos)
 				{
-					std::cout << "Unautorised method " << rqst.get_method() << "!" << std::endl;
+					std::cout << "Unauthorised method " << rqst.get_method() << "!" << std::endl;
 					show_error_page(405, this->_clients[i]);
 					if (this->kill_client(this->_clients[i]))
 						i--;
@@ -441,13 +441,13 @@ void Host::show_error_page(int err, Client& client)
 			}
 			close(fd);
 			// this->show_page(client, errpages[ft_to_string<int>(err)], err);
-            std::cout << colors::on_bright_red << "Show error : " << it->second << " !" << colors::on_grey << std::endl;
-            std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + std::to_string(it->second.size()) + "\n\n" + it->second + "\n";
-            int sendret = send(client.get_client_socket() , msg.c_str(), msg.size(), 0);
-            if(sendret < 0)
-                std::cout << "Client disconnected" << std::endl;
-            else if (sendret == 0)
-                std::cout << "0 byte passed to server" << std::endl;
+			std::cout << colors::on_bright_red << "Show error : " << it->second << " !" << colors::on_grey << std::endl;
+			std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + std::to_string(it->second.size()) + "\n\n" + it->second + "\n";
+			int sendret = send(client.get_client_socket() , msg.c_str(), msg.size(), 0);
+			if(sendret < 0)
+				std::cout << "Client disconnected" << std::endl;
+			else if (sendret == 0)
+				std::cout << "0 byte passed to server" << std::endl;
 		}
 	}
 }
@@ -767,10 +767,10 @@ sponse message
 -------------------------------------------------------------------------------- */
 int			find_size(std::string dir)
 {
-	FILE* fd_s = fopen(dir.c_str(), "rb");									
-	fseek(fd_s, 0, SEEK_END);												
-	int lSize = ftell(fd_s);												
-	rewind(fd_s);															
+	FILE* fd_s = fopen(dir.c_str(), "rb");
+	fseek(fd_s, 0, SEEK_END);
+	int lSize = ftell(fd_s);
+	rewind(fd_s);
 	fclose(fd_s);
 
 	return lSize;

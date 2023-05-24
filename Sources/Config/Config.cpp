@@ -177,8 +177,8 @@ Store all information from the configuration file in the appropriate variables
 -------------------------------------------------------------------------------- */
 void	Config::store_data()
 {
-	int len = this->_file.size(), 
-		nb_server = -1, 
+	int len = this->_file.size(),
+		nb_server = -1,
 		nb_locations = -1,
 		status = 0,
 		status1 = 0;
@@ -198,7 +198,7 @@ void	Config::store_data()
 					throw DirMissing();
 				else if (new_open != -1 && new_open < close)
 					throw DirMissing();
-				
+
 				this->set_servers();
 				nb_server++;
 				nb_locations = -1;

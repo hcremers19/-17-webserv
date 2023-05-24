@@ -64,7 +64,6 @@ void Request::parse_POST(std::stringstream& ss)
 	std::string	token;
 	std::string	value;
 	std::string	key;
-	std::string	buff;
 	size_t		pos = this->_request.find("\r\n\r\n");
 
 	while (ss >> token)
