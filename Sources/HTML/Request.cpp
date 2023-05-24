@@ -69,7 +69,7 @@ void Request::parse_POST(std::stringstream& ss)
 
 	while (ss >> token)
 	{
-		std::cout << colors::bright_magenta << "Token = " << token << colors::reset << std::endl;
+		// std::cout << colors::bright_magenta << "Token = " << token << colors::reset << std::endl;
 
 		if (token.find("boundary=") != std::string::npos)
 			this->_boundary = token.substr(token.find("boundary=") + 9);
@@ -132,7 +132,7 @@ void Request::parse_GET(std::stringstream& ss)
 
 	while (ss >> token)
 	{
-		std::cout << colors::bright_magenta << "Token = " << token << colors::reset << std::endl;
+		// std::cout << colors::bright_magenta << "Token = " << token << colors::reset << std::endl;
 
 		if (ft_back(token) == ':')
 		{

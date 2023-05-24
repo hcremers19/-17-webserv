@@ -123,6 +123,7 @@ void Host::handle_request()
 			{
 				std::cout << colors::bright_cyan << "== New request! ==" << colors::reset << std::endl;
 
+				std::cout << colors::cyan << "Final request:" << this->_clients[i].finalRequest << colors::reset << std::endl;
 				Request	rqst(this->_clients[i].finalRequest.c_str());
 				int		ret = -1;
 				if ((ret = rqst.check_method_and_protocol()) != -1)
@@ -411,7 +412,7 @@ void Host::show_error_page(int err, Client& client)
 {
 	std::map<std::string, std::string> errpages = this->servers[client.get_n_server()]->get_error();
 
-	if (errpages.find(ft_to_string<int>(err)) == errpages.end())
+	if (errpages.find(ft_to_string<int>(err)) != errpages.end())
 	{
 		int fd = open(errpages[ft_to_string<int>(err)].c_str(), O_RDONLY);
 		if (fd < 0)
@@ -439,14 +440,14 @@ void Host::show_error_page(int err, Client& client)
 				return;
 			}
 			close(fd);
-			this->show_page(client, errpages[ft_to_string<int>(err)], err);
-            // std::cout << colors::on_bright_red << "Show error : " << it->second << " !" << colors::on_grey << std::endl;
-            // std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + std::to_string(it->second.size()) + "\n\n" + it->second + "\n";
-            // int sendret = send(client.get_client_socket() , msg.c_str(), msg.size(), 0);
-            // if(sendret < 0)
-            //     std::cout << "Client disconnected" << std::endl;
-            // else if (sendret == 0)
-            //     std::cout << "0 byte passed to server" << std::endl;
+			// this->show_page(client, errpages[ft_to_string<int>(err)], err);
+            std::cout << colors::on_bright_red << "Show error : " << it->second << " !" << colors::on_grey << std::endl;
+            std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + std::to_string(it->second.size()) + "\n\n" + it->second + "\n";
+            int sendret = send(client.get_client_socket() , msg.c_str(), msg.size(), 0);
+            if(sendret < 0)
+                std::cout << "Client disconnected" << std::endl;
+            else if (sendret == 0)
+                std::cout << "0 byte passed to server" << std::endl;
 		}
 	}
 }
@@ -491,8 +492,8 @@ std::string Host::get_root_path(std::string urlrcv, int i)
 	std::string urlroot = this->servers[i]->get_root();
 	if (urlroot[urlroot.size() - 1] == '/')
 		urlroot.erase(urlroot.size() - 1, 1);
-	if (this->loc && !(this->loc->get_root().empty()))
-		urlrcv.erase(urlrcv.find(this->loc->get_dir()), urlrcv.find(this->loc->get_dir()) + this->loc->get_dir().size());
+	// if (this->loc && !(this->loc->get_root().empty()))
+	// 	urlrcv.erase(urlrcv.find(this->loc->get_dir()), urlrcv.find(this->loc->get_dir()) + this->loc->get_dir().size());
 
 	std::cout << "Url To Send: " << colors::green << urlroot + urlrcv << colors::reset << std::endl;
 	std::cout << "urlroot: " << colors::green << urlroot << colors::reset << std::endl;

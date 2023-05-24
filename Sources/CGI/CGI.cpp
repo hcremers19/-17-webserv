@@ -1,5 +1,11 @@
 #include "../webserv.hpp"
 
+void pexit(const char *error, int i)
+{
+    perror(error);
+    exit(i);
+}
+
 /* --------------------------------------------------------------------------------
 Return the path to the executable in which to run the script, depending on
 whether the file extension is .py (Python) or .pl (Perl)
@@ -9,9 +15,9 @@ std::string file_extention(std::string filePath)
 {
 	size_t i = 0;
 
-	while (filePath[i++]);
-	while (i && filePath[--i] != '.');
-
+    while (filePath[i]) i++;
+    while(i && filePath[i] != '.') i--;
+	
 	std::cout << colors::bright_magenta << "file_extension: " << colors::reset << &filePath[i] << std::endl;
 	// return ((!strcmp(&filePath[i], ".py")) ? "/usr/bin/python3" : ((!strcmp(&filePath[i], ".pl")) ? "/usr/bin/perl" : ""));
 	if (!strcmp(&filePath[i], ".py"))
@@ -41,17 +47,6 @@ std::string search_exec(std::string filePath)
 }
 
 /* --------------------------------------------------------------------------------
-Converts a size_t numeric value to std::string.
--------------------------------------------------------------------------------- */
-std::string ft_st_to_string(size_t x)
-{
-	std::ostringstream oss;
-
-	oss << x;
-	return (oss.str());
-}
-
-/* --------------------------------------------------------------------------------
 Create a new environment in vector form, which includes all the values of the
 environment in which webserv is running + custom values related to the request
 currently being processed
@@ -71,7 +66,7 @@ void new_env(char** envp, Request& req, std::vector<std::string>& my_env, Server
 	if (!req.get_method().empty())
 		my_env.push_back("REQUEST_METHOD=" + req.get_method());
 	if (req.get_len())
-		my_env.push_back("CONTENT_LENGTH=" + ft_st_to_string(req.get_len()));
+		my_env.push_back("CONTENT_LENGTH=" + std::to_string(req.get_len()));	// c++11
 	if (!req.get_protocol().empty())
 		my_env.push_back("SERVER_SOFTWARE=" + req.get_protocol());
 
@@ -93,21 +88,9 @@ char**	vector_to_tab(std::vector<std::string>& vec)
 
 	tab = (char**)malloc(sizeof(char*)* (vec.size() + 1));
 	if (!tab)
-	{
-		perror("malloc vector_to_tab");
-		exit(1);
-	}
-
-	std::cout << colors::grey << colors::on_yellow << "--- ENV ---" << colors::reset << colors::yellow << std::endl;
-
+		pexit("malloc vector_to_tab", 1);
 	for (std::vector<std::string>::iterator it = vec.begin(); it != vec.end(); it++)
-	{
 		tab[i++] = (char*)(*it).c_str();
-		std::cout << tab[i - 1] << std::endl;
-	}
-
-	std::cout << colors::reset;
-
 	tab[i] = 0;
 	return tab;
 }
@@ -131,101 +114,68 @@ std::string exec_CGI(std::string filePath, char** envp, Request& req, Server* se
 		return ("");
 	}
 
-	// int		fdIn = 0;
-	// int		fd_in[2];
-	int		fd_out[2];
-	char*	tab[3];
+	int fdIn,
+		fd_in[2],
+		fd_out[2],
+		i;
+	char buff[2041] = {0};														// /!\ Comprendre pourquoi 2040
+	char* tab[3];
+	char** myEnv;
 	std::vector<std::string> env;
-	pid_t	pid;
-	char	buff[BUFFER_SIZE + 1] = {0};
-	std::string	ret = "";
-	int		i;
+	std::string ret = "";
 
+	tab[0] = (char *)execPath.c_str();											// Chemin vers l'exécutable qui sera nécessaire
+	tab[1] = (char *)filePath.c_str();											// Chemin vers le fichier à exécuter --> Utiles pour execve
+	tab[2] = 0;
 	new_env(envp, req, env, serv);
-	char** myEnv = vector_to_tab(env);
-
-	// pipe(fd_in);
+	myEnv = vector_to_tab(env);
+	pipe(fd_in);
 	pipe(fd_out);
+	pid_t pid = fork();
 
-	pid = fork();
 	if (pid == -1)
+		pexit("fork()", 1);
+	if (pid == 0)
 	{
-		perror("fork()");
-		exit(1);
-	}
-	else if (pid == 0)
-	{
-		// close(fd_in[1]);
+		close(fd_in[1]);
 		close(fd_out[0]);
-		// if (dup2(fd_in[0], STDIN_FILENO) == -1)
-		// {
-		// 	perror("dup2");
-		// 	exit(1);
-		// }
-		if (dup2(fd_out[1], STDOUT_FILENO) == -1)
-		{
-			perror("dup2");
-			exit(1);
-		}
-		// close(fd_in[0]);
-		// close(fd_in[1]);
-		close(fd_out[0]);
-		close(fd_out[1]);
-
-		tab[0] = (char*)execPath.c_str();
-		tab[1] = (char*)filePath.c_str();
-		tab[2] = NULL;
-
+		if (dup2(fd_in[0], 0) == -1 || dup2(fd_out[1], 1) == -1)
+			pexit("dup2", 1);
 		execve(tab[0], tab, myEnv);
-		perror("execve");
-		exit(1);
+		pexit("execve", 1);
 	}
 	else
 	{
-		// fdIn = dup(0);
-		// if (fdIn == -1)
-		// {
-		// 	perror("dup");
-		// 	exit(1);
-		// }
-		// if (dup2(fd_in[0], 0) == -1)
-		// {
-			// perror("dup2");
-			// exit(1);
-		// }
-		// if (!req.get_full_body().empty())
-			// write(fd_in[1], req.get_full_body().c_str(), req.get_len());
-		// close(fd_in[0]);
-		// close(fd_in[1]);
-		waitpid(pid, NULL, 0);
-		// if (dup2(fd_in[0], STDIN_FILENO) == -1)
-		// {
-		// 	perror("dup2");
-		// 	exit(1);
-		// }
-		close(fd_out[1]);
+		fdIn = dup(0);
+		if (fdIn == -1)
+			pexit("dup", 1);
+		if (dup2(fd_in[0], 0) == -1)
+			pexit("dup2", 1);
+		if (!req.get_full_body().empty())
+			write(fd_in[1], req.get_full_body().c_str(), req.get_len()); // req.getBody ou req.getBodyComplet
+		close(fd_in[0]);
+		close(fd_in[1]);
+		waitpid(pid, 0, 0);
+		if (dup2(fdIn, 0) == -1)
+			pexit("dup2", 1);
 		free(myEnv);
-		i = read(fd_out[0], buff, BUFFER_SIZE);
+		close(fd_out[1]);
+		i = read(fd_out[0], buff, 2040);
 		if (i == -1)
-		{
-			perror("read");
-			exit(1);
-		}
-		buff[i] = '\0';
+			pexit("read", 1);
+		buff[i] = 0;
 		ret += std::string(buff);
 		while (i > 0)
 		{
-			i = read(fd_out[0], buff, BUFFER_SIZE);
+			i = read(fd_out[0], buff, 2040);
 			if (i == -1)
-			{
-				perror("read");
-				exit(1);
-			}
-			buff[i] = '\0';
-			ret += std::string(buff);
+				pexit("read", 1);
+			buff[i] = 0;
+			ret += std::string(buff);											// Lire une à une toutes les lignes du résultat du script CGI
 		}
 		close(fd_out[0]);
-		return ret;
+		std::cout << "ret = " << ret << std::endl;
+		return ret;																// Retourner le résultat final du script en une seule string comprenant toutes les lignes
 	}
 	return "";
 }
