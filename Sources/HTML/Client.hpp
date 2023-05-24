@@ -1,7 +1,7 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# define MAX_REQUEST_SIZE 65536
+# define MAX_REQUEST_SIZE 655360
 
 # include "../webserv.hpp"
 
