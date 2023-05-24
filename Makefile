@@ -4,8 +4,8 @@
 
 # -.-.-.-.	Colors 	-.-.-.-.-.
 
-C_DEFAUT		=	\033[0;39m
-C_ORANGE		=	\033[0;33m
+C_DEFAULT		=	\033[0;39m
+C_YELLOW		=	\033[0;33m
 C_GREEN 		= 	\033[1;32m
 C_RED			= 	\033[0;31m
 
@@ -40,15 +40,15 @@ SRCS		=	Sources/CGI/CGI.cpp	\
 all: ${NAME}
 
 ${NAME}:
-#	@${PRI} "\n${C_ORANGE}... compiling ...\n${C_DEFAUT}"
-	@${PRI} "${C_ORANGE}... compiling ...\n\n${C_DEFAUT}"
+#	@${PRI} "\n${C_YELLOW}... compiling ...\n${C_DEFAULT}"
+	@${PRI} "${C_YELLOW}... compiling ...\n\n${C_DEFAULT}"
 	@${CC} ${FLAGS} -I ${INCLUDES} ${SRCS} -o ${NAME}
 #	@${VEL} 0.3
-	@${PRI} "${C_GREEN}$@ exec --> Successfully Built\n${C_DEFAUT}"
+	@${PRI} "${C_GREEN}$@ exec --> Successfully Built\n${C_DEFAULT}"
 		
 clean:
 	@${RM} ${NAME}
-	@${PRI} "${C_RED}Exec file deleted\n\n${C_DEFAUT}"
+	@${PRI} "${C_RED}Exec file deleted\n\n${C_DEFAULT}"
 
 fclean: clean
 

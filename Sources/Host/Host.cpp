@@ -113,6 +113,13 @@ void Host::handle_request()
 			int header_size = this->_clients[i].finalRequest.find("\r\n\r\n", 0);
 			header_size += 4;
 
+			if (Reqsize < 0)
+			{
+				std::cout << "Recv failed!" << std::endl;
+				show_error_page(500, _clients[i]);
+				kill_client(_clients[i]);
+				i--;
+			}
 			if (Reqsize == 0)
 			{
 				std::cout << colors::on_bright_red << "Connection is closed!" << colors::reset << std::endl;
@@ -124,6 +131,7 @@ void Host::handle_request()
 				std::cout << colors::bright_cyan << "== New request! ==" << colors::reset << std::endl;
 
 				// std::cout << colors::cyan << "Final request:" << this->_clients[i].finalRequest << colors::reset << std::endl;
+
 				Request	rqst(this->_clients[i].finalRequest.c_str());
 				int		ret = -1;
 				if ((ret = rqst.check_method_and_protocol()) != -1)
@@ -444,7 +452,7 @@ void Host::show_error_page(int err, Client& client)
 			std::cout << colors::on_bright_red << "Show error : " << it->second << " !" << colors::on_grey << std::endl;
 			std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + std::to_string(it->second.size()) + "\n\n" + it->second + "\n";
 			int sendret = send(client.get_client_socket() , msg.c_str(), msg.size(), 0);
-			if(sendret < 0)
+			if (sendret < 0)
 				std::cout << "Client disconnected" << std::endl;
 			else if (sendret == 0)
 				std::cout << "0 byte passed to server" << std::endl;

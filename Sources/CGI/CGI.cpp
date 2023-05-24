@@ -163,7 +163,8 @@ std::string exec_CGI(std::string filePath, char** envp, Request& req, Server* se
 		if (dup2(fd_in[0], 0) == -1)
 			pexit("dup2", 1);
 		if (!req.get_full_body().empty())
-			write(fd_in[1], req.get_full_body().c_str(), req.get_len());
+			if (write(fd_in[1], req.get_full_body().c_str(), req.get_len()) < 0)
+				pexit("write", 1);
 		close(fd_in[0]);
 		close(fd_in[1]);
 		waitpid(pid, 0, 0);

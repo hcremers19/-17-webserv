@@ -63,6 +63,6 @@ void Socket::setup(std::string port, std::string ip)
 		timeinfo = localtime(&rawtime);
 
 		strftime(buffer, 80, "[%H:%M:%S]", timeinfo);
-		std::cout << colors::yellow << buffer << "[" << port << "] listening ..." << colors::reset << std::endl;
+		std::cout << colors::yellow << buffer << "[" << port << "] listening..." << colors::reset << std::endl;
 	}
 }
