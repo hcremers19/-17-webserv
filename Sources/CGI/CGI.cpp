@@ -18,7 +18,6 @@ std::string file_extention(std::string filePath)
     while (filePath[i]) i++;
     while(i && filePath[i] != '.') i--;
 
-	std::cout << colors::bright_magenta << "file_extension: " << colors::reset << &filePath[i] << std::endl;
 	// return ((!strcmp(&filePath[i], ".py")) ? "/usr/bin/python3" : ((!strcmp(&filePath[i], ".pl")) ? "/usr/bin/perl" : ""));
 	if (!strcmp(&filePath[i], ".py"))
 		return "/usr/bin/python2.7";
@@ -115,10 +114,8 @@ function
 -------------------------------------------------------------------------------- */
 std::string exec_CGI(std::string filePath, char** envp, Request& req, Server* serv)
 {
-	std::cout << colors::bright_magenta << "filePath: " << colors::reset << filePath << std::endl;
 	std::string execPath = search_exec(filePath);
 
-	std::cout << colors::bright_magenta << "execPath: " << colors::reset << execPath << std::endl;
 	if (execPath == "")
 	{
 		std::cerr << "Bad file" << std::endl;

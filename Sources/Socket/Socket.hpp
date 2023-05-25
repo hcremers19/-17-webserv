@@ -10,11 +10,10 @@ class Socket
 {
 	public:
 		int		get_server_socket() {return _serverSocket;}
-
 		void	setup(std::string port, std::string ip);
 
 	private:
-		int _serverSocket;
+		int		_serverSocket;
 
 };
 

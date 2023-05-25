@@ -59,6 +59,8 @@ fore being exported to the global variable
 -------------------------------------------------------------------------------- */
 int main(int ac, char** av, char** envp)
 {
+	std::cout << colors::grey << colors::on_bright_green << "\nWelcome to webserv!" << colors::reset << std::endl;
+
 	Config data;
 
 	try

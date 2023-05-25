@@ -73,7 +73,6 @@ void Host::accept_client()
 				perror("Connect");
 				exit(-1);
 			}
-			std::cout << colors::green << "New connection!" << colors::reset << std::endl;
 		}
 	}
 }
@@ -122,15 +121,17 @@ void Host::handle_request()
 			}
 			if (Reqsize == 0)
 			{
-				std::cout << colors::on_bright_red << "Connection is closed!" << colors::reset << std::endl;
+				std::cout << colors::on_bright_red << "Connection closed" << colors::reset << std::endl;
 				this->kill_client(this->_clients[i]);
 				i--;
 			}
 			else if (is_request_done((char*)this->_clients[i].finalRequest.c_str(), header_size, this->_clients[i].requestSize))
 			{
-				std::cout << colors::bright_cyan << "== New request! ==" << colors::reset << std::endl;
+				std::cout << std::endl
+					<< colors::grey << colors::on_bright_cyan << "New request on port"
+					<< colors::reset << " " << this->servers[this->_clients[i].get_n_server()]->get_port() << std::endl;
 
-				// std::cout << colors::cyan << "Final request:" << this->_clients[i].finalRequest << colors::reset << std::endl;
+				// std::cout << colors::cyan << this->_clients[i].finalRequest << colors::reset << std::endl;
 
 				Request	rqst(this->_clients[i].finalRequest.c_str());
 				int		ret = -1;
@@ -166,7 +167,6 @@ void Host::handle_request()
 					this->is_allowed(this->servers[this->_clients[i].get_n_server()]->get_method(), rqst.get_method()) :
 					this->is_allowed(this->loc->get_method(), rqst.get_method())) && urlrcv.find("cgi_bin") == std::string::npos)
 				{
-					std::cout << "Unauthorised method " << rqst.get_method() << "!" << std::endl;
 					show_error_page(405, this->_clients[i]);
 					if (this->kill_client(this->_clients[i]))
 						i--;
@@ -174,13 +174,14 @@ void Host::handle_request()
 				}
 				if (this->is_cgi(urlrcv))
 				{
-					std::cout << colors::blue << "CGI start!" << colors::reset << std::endl;
-
-					std::cout << "handle_request URL = " << urlrcv << std::endl;
 					std::string urlsend = this->get_root_path(urlrcv, this->_clients[i].get_n_server());
+
+					std::cout << colors::blue << "Starting CGI on URL" << colors::reset << " " << urlsend << std::endl;
+
 					std::string rescgi = exec_CGI(urlsend, this->envp, rqst, this->servers[this->_clients[i].get_n_server()]);
 
-					std::cout << colors::bright_magenta << "rescgi: " << colors::reset << rescgi << std::endl;
+					// std::cout << colors::blue << "CGI returned" << colors::reset << " " << rescgi << std::endl;
+
 					if (rescgi.empty())
 						this->show_error_page(500, this->_clients[i]);
 
@@ -225,7 +226,7 @@ the files in the folder
 -------------------------------------------------------------------------------- */
 void Host::GET_method(Client& client, std::string urlrcv)
 {
-	std::cout << colors::bright_yellow << "GET method!" << colors::reset << std::endl;
+	std::cout << colors::bright_cyan << "GET" << colors::reset << " " << urlrcv << std::endl;
 
 	if (urlrcv.size() >= 64)
 	{
@@ -234,7 +235,6 @@ void Host::GET_method(Client& client, std::string urlrcv)
 	}
 	struct stat path_stat;
 
-	std::cout << "GET_method URL = " << urlrcv << std::endl;
 	std::string urlsend = this->get_root_path(urlrcv, client.get_n_server());
 
 	if (this->loc && !(this->loc->get_index().empty()) && (strcmp(urlrcv.c_str(), \
@@ -248,16 +248,13 @@ void Host::GET_method(Client& client, std::string urlrcv)
 	stat(urlsend.c_str(), &path_stat);
 
 	if (fd == NULL)
-	{
-		std::cout << colors::on_bright_blue << "Resource not found: "<< urlsend << colors::reset << std::endl;
 		this->show_error_page(404, client);
-	}
 	else
 	{
 
 		if (S_ISDIR(path_stat.st_mode))
 		{
-			std::cout << colors::on_bright_blue << "File is a directory!" << colors::reset << std::endl;
+			// std::cout << colors::magenta << "The URI points to a directory" << colors::reset << std::endl;
 
 			if (strcmp(urlrcv.c_str(), "/") == 0)
 				this->show_page(client, urlsend + this->servers[client.get_n_server()]->get_index(), 200);
@@ -279,8 +276,7 @@ Delete the resource indicated by the URL
 -------------------------------------------------------------------------------- */
 void Host::DELETE_method(Client& client, std::string urlrcv)
 {
-	std::cout << colors::bright_yellow << "DELETE method!" << colors::reset << std::endl;
-	std::cout << "DELETE_method URL = " << urlrcv << std::endl;
+	std::cout << colors::bright_cyan << "DELETE" << colors::reset << " " << urlrcv << std::endl;
 	std::string urlsend = this->get_root_path(urlrcv, client.get_n_server());
 
 	FILE* fd = fopen(urlsend.c_str(), "r");
@@ -298,7 +294,7 @@ void Host::DELETE_method(Client& client, std::string urlrcv)
 		this->show_error_page(500, client);
 	else if (ret == 0)
 		this->show_error_page(400, client);
-	std::cout << colors::green << urlsend << " has been deleted!" << colors::reset << std::endl;
+	std::cout << urlsend << " " << colors::green << "has been deleted" << colors::reset << std::endl;
 }
 
 /* --------------------------------------------------------------------------------
@@ -310,13 +306,12 @@ ter, then S_ISDIR() tells if it is a folder or not
 -------------------------------------------------------------------------------- */
 void Host::POST_method(Client client, std::string url, Request req)
 {
-	std::cout << colors::bright_yellow << "POST method!" << colors::reset << std::endl;
+	std::cout << colors::bright_cyan << "POST in" << colors::reset << " " << url << std::endl;
 	if (req.get_header()["Transfer-Encoding"] == "chunked")
 	{
 		this->show_error_page(411, client);
 		return;
 	}
-	std::cout << "POST_method URL = " << url << std::endl;
 	std::string	urlsend = this->get_root_path(url, client.get_n_server());
 	struct stat	buf;
 	lstat(urlsend.c_str(), &buf);
@@ -330,7 +325,7 @@ void Host::POST_method(Client client, std::string url, Request req)
 		std::string	file;
 		if (!(req.get_header()["Content-Type"].empty()) && !(req.get_boundary().empty()))
 		{
-			std::cout << colors::on_cyan << "Post in directory: " << colors::reset << std::endl;
+			std::cout << colors::bright_magenta << "Post in directory" << colors::reset << std::endl;
 			for (int i = 0; true; i++)
 			{
 				if ((start = body.find("name=\"", start)) == std::string::npos)
@@ -364,7 +359,7 @@ void Host::POST_method(Client client, std::string url, Request req)
 	}
 	else
 	{
-		std::cout << colors::on_cyan << "Post in file" << colors::reset << std::endl;
+		std::cout << colors::bright_magenta << "Post in file" << colors::reset << std::endl;
 		if (!this->write_with_poll(urlsend, client, req))
 			return;
 	}
@@ -390,7 +385,7 @@ void Host::init_host(char** env, Config* data)
 	for (size_t i = 0; i < this->servers.size(); i++)
 	{
 		Socket socket;
-		socket.setup(this->servers[i]->get_listen(), this->servers[i]->get_name());
+		socket.setup(this->servers[i]->get_port(), this->servers[i]->get_name());
 		this->_sockets.push_back(socket);
 	}
 	this->_errors.insert(std::make_pair(200, "200 OK"));
@@ -415,18 +410,23 @@ void Host::init_host(char** env, Config* data)
 /* --------------------------------------------------------------------------------
 Send on the socket the message and the error page corresponding to the int re-
 ceived in first parameter
+
+Find out if there is a path that has been configured for the page received as a
+parameter, and open it if there is
+If not, simply display the status in the browser, without a configured page
 -------------------------------------------------------------------------------- */
 void Host::show_error_page(int err, Client& client)
 {
 	std::map<std::string, std::string> errpages = this->servers[client.get_n_server()]->get_error();
+
+	std::cout << colors::red << "Error " << this->_errors[err] << colors::reset << std::endl;
 
 	if (errpages.find(ft_to_string<int>(err)) != errpages.end())
 	{
 		int fd = open(errpages[ft_to_string<int>(err)].c_str(), O_RDONLY);
 		if (fd < 0)
 		{
-			std::cout << colors::on_bright_red << "Show error: " << this->_errors[err] << "!" << colors::reset << std::endl;
-			std::cout << colors::on_bright_red << "Pre-config error page doesn't exist: " << errpages[ft_to_string<int>(err)] << colors::reset << std::endl;
+			std::cout << colors::bright_red << "No pre-configurated error page at path" << colors::reset << " " << errpages[ft_to_string<int>(err)] << std::endl;
 			close(fd);
 			return;
 		}
@@ -438,18 +438,7 @@ void Host::show_error_page(int err, Client& client)
 		std::map<int, std::string>::iterator it = this->_errors.find(err);
 		if (it != this->_errors.end())
 		{
-			std::cout << colors::on_bright_red << "Show error: " << it->second << "!" << colors::reset << std::endl;
-			int fd = open(errpages[ft_to_string<int>(err)].c_str(), O_RDONLY);
-			if (fd < 0)
-			{
-				std::cout << colors::on_bright_red << "Show error: " << this->_errors[err] << "!" << colors::reset << std::endl;
-				std::cout << colors::on_bright_red << "Pre-config error page doesn't exist: " << errpages[ft_to_string<int>(err)] << colors::reset << std::endl;
-				close(fd);
-				return;
-			}
-			close(fd);
-			// this->show_page(client, errpages[ft_to_string<int>(err)], err);
-			std::cout << colors::on_bright_red << "Show error : " << it->second << " !" << colors::on_grey << std::endl;
+			std::cout << colors::bright_red << "Show status message " << err << colors::reset << std::endl;
 			std::string msg = "HTTP/1.1 " + it->second + "\nContent-Type: text/plain\nContent-Length: " + std::to_string(it->second.size()) + "\n\n" + it->second + "\n";
 			int sendret = send(client.get_client_socket() , msg.c_str(), msg.size(), 0);
 			if (sendret < 0)
@@ -466,7 +455,7 @@ from the list of registered clients
 -------------------------------------------------------------------------------- */
 bool Host::kill_client(Client client)
 {
-	std::cout << colors::red << "Client killed" << colors::reset << std::endl;
+	std::cout << colors::white << colors::on_red << "Client killed" << colors::reset << std::endl;
 	close(client.get_client_socket());
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
@@ -502,10 +491,6 @@ std::string Host::get_root_path(std::string urlrcv, int i)
 		urlroot.erase(urlroot.size() - 1, 1);
 	// if (this->loc && !(this->loc->get_root().empty()))
 	// 	urlrcv.erase(urlrcv.find(this->loc->get_dir()), urlrcv.find(this->loc->get_dir()) + this->loc->get_dir().size());
-
-	std::cout << "Url To Send: " << colors::green << urlroot + urlrcv << colors::reset << std::endl;
-	std::cout << "urlroot: " << colors::green << urlroot << colors::reset << std::endl;
-	std::cout << "urlrcv: " << colors::green << urlrcv << colors::reset << std::endl;
 	return urlroot + urlrcv;
 }
 
@@ -545,7 +530,7 @@ void Host::show_page(Client client, std::string dir, int code)
 	int r;
 
 	if (dir != "")
-		std::cout << colors::on_cyan << "Show page: " << colors::reset << colors::cyan << dir << colors::reset << std::endl;
+		std::cout << colors::green << "Show page:" << colors::reset << " " << dir << colors::reset << std::endl;
 
 	if (dir.empty())
 	{
@@ -620,7 +605,7 @@ directory listing page and display it directly
 -------------------------------------------------------------------------------- */
 void Host::directory_listing(int socket, std::string path, std::string fullurl, Client client)
 {
-	std::cout << colors::on_cyan << "Show repository listing" << colors::reset << std::endl;
+	std::cout << colors::magenta << "Show directory listing" << colors::reset << std::endl;
 
 	DIR* dir;
 	struct dirent* entry;
@@ -717,7 +702,7 @@ bool Host::write_with_poll(std::string url, Client client, Request req)
 	this->add_to_wait(fd, &this->writeSet);
 	this->select_fd(&this->readSet, &this->writeSet);
 
-	std::cout << colors::green << req.get_full_body() << colors::reset << std::endl;
+	// std::cout << colors::green << req.get_full_body() << colors::reset << std::endl;
 	r = write(fd, req.get_full_body().c_str(), req.get_full_body().size());
 	if (r < 0)
 	{
@@ -738,13 +723,8 @@ Location* Host::get_location(std::string url, int i)
 {
 	std::vector<Location*> locs = this->servers[i]->get_location();
 	for (size_t i = 0; i < locs.size(); i++)
-	{
 		if (strncmp(locs[i]->get_dir().c_str(), url.c_str(), locs[i]->get_dir().size()) == 0)
-		{
-			std::cout << colors::on_cyan << url << " is a location" << colors::reset << std::endl;
 			return locs[i];
-		}
-	}
 	return NULL;
 }
 
@@ -756,7 +736,7 @@ site
 -------------------------------------------------------------------------------- */
 void Host::do_redir(Client client, std::string url)
 {
-	std::cout << colors::on_cyan << "Is a redirection to: " << url << colors::reset << std::endl;
+	std::cout << colors::magenta << "Redirect user to" << colors::reset << " " << url << std::endl;
 	std::string tosend = "HTTP/1.1 200 OK\n\n<head><meta http-equiv = \"refresh\" content = \"0; url =" + url + "\" /></head>";
 
 	int r = send(client.get_client_socket(), tosend.c_str(), tosend.size(), 0);

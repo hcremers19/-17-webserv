@@ -44,11 +44,11 @@ ${NAME}:
 	@${PRI} "${C_YELLOW}... compiling ...\n\n${C_DEFAULT}"
 	@${CC} ${FLAGS} -I ${INCLUDES} ${SRCS} -o ${NAME}
 #	@${VEL} 0.3
-	@${PRI} "${C_GREEN}$@ exec --> Successfully Built\n${C_DEFAULT}"
+	@${PRI} "${C_GREEN}\"$@\" successfully built!\n${C_DEFAULT}"
 		
 clean:
 	@${RM} ${NAME}
-	@${PRI} "${C_RED}Exec file deleted\n\n${C_DEFAULT}"
+	@${PRI} "${C_RED}Executable deleted\n\n${C_DEFAULT}"
 
 fclean: clean
 

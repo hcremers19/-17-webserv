@@ -61,13 +61,13 @@ void	Config::check_data()
 {
 	for (size_t i = 0; i < this->_servers.size(); i++)
 	{
-		if (this->_servers[i]->get_name().empty() || this->_servers[i]->get_listen().empty() || this->_servers[i]->get_root().empty()
+		if (this->_servers[i]->get_name().empty() || this->_servers[i]->get_port().empty() || this->_servers[i]->get_root().empty()
 			|| this->_servers[i]->get_index().empty() || this->_servers[i]->get_method().empty() || this->_servers[i]->get_body_size().empty()
 			|| this->_servers[i]->get_listing().empty())
 			throw DirMissing();
 		if (!this->_servers[i]->check_locations())
 			throw DirMissing();
-		if (this->_servers[i]->get_listen().size() > 4 || !is_digit_str(this->_servers[i]->get_listen()) || !is_digit_str(this->_servers[i]->get_body_size()))
+		if (this->_servers[i]->get_port().size() > 4 || !is_digit_str(this->_servers[i]->get_port()) || !is_digit_str(this->_servers[i]->get_body_size()))
 			throw NotINT();
 		if (!this->_servers[i]->check_error_page())
 			throw ErrorPage();
@@ -246,7 +246,7 @@ void	Config::store_server(std::string line, Server* server)
 	{
 		last = ft_last_word(line);
 		std::map<std::string, std::string> settings;
-		settings.insert(std::make_pair("listen", server->get_listen()));
+		settings.insert(std::make_pair("listen", server->get_port()));
 		settings.insert(std::make_pair("server_name", server->get_name()));
 		settings.insert(std::make_pair("root", server->get_root()));
 		settings.insert(std::make_pair("index", server->get_index()));
@@ -259,7 +259,7 @@ void	Config::store_server(std::string line, Server* server)
 				throw DirTwice();
 			settings[word] = last;
 			if (word == "listen")
-				server->set_listen(last);
+				server->set_port(last);
 			else if (word == "server_name")
 				server->set_name(last);
 			else if (word == "root")

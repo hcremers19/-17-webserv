@@ -13,7 +13,7 @@ class Server
 		Server();
 		~Server();
 
-		void set_listen(std::string word)					{this->_listen = word;}
+		void set_port(std::string word)						{this->_port = word;}
 		void set_name(std::string word)						{this->_name = word;}
 		void set_method(std::string word)					{this->_method.push_back(word);}
 		void set_root(std::string word)						{this->_root = word;}
@@ -23,7 +23,7 @@ class Server
 		void set_location()									{this->_locations.push_back(new Location());}
 		void set_listing(std::string word)					{this->_listing = word;}
 
-		std::string							get_listen()	{return this->_listen;}
+		std::string							get_port()		{return this->_port;}
 		std::string							get_name()		{return this->_name;}
 		std::vector<std::string>			get_method()	{return this->_method;}
 		std::string							get_root()		{return this->_root;}
@@ -43,7 +43,7 @@ class Server
 		bool check_client_size();
 
 	private:
-		std::string							_listen;
+		std::string							_port;
 		std::string							_name;
 		std::vector<std::string>			_method;
 		std::string							_root;
